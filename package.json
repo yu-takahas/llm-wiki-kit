@@ -1,0 +1,16 @@
+{
+  "name": "llm-wiki-kit",
+  "private": true,
+  "scripts": {
+    "format": "prettier --check . --log-level warn",
+    "format:fix": "prettier --write . --log-level warn",
+    "lint:md": "markdownlint-cli2 '**/*.md'",
+    "lint:md:fix": "markdownlint-cli2 --fix '**/*.md'",
+    "prepare": "lefthook install"
+  },
+  "devDependencies": {
+    "lefthook": "^2.1.6",
+    "markdownlint-cli2": "^0.17.0",
+    "prettier": "^3.8.3"
+  }
+}

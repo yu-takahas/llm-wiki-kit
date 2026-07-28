@@ -1,0 +1,21 @@
+config:
+  MD001: false # 見出しレベル飛び許容
+  MD009: false # 行末スペース許容（改行制御）
+  MD012: false # 連続空行許容
+  MD013: false # 行長制限なし（日本語）
+  MD024: false # 重複見出し許容（対話ログで `# you asked` / `# gemini response` が頻出）
+  MD025: false # 単一 H1 ルール無効化（対話ログ + frontmatter title）
+  MD026: false # 句読点付き見出し許容
+  MD028: false # blockquote 内の空行許容（対話ログ）
+  MD033: false # インライン HTML 許容（Obsidian の <br> / callout）
+  MD034: false # bare URL 許容（vim yank 時の visual 選択が面倒、<> 囲みを強制しない）
+  MD036: false # 強調による見出し代用許容
+  MD037: false # 強調内スペース許容（glob の ** が誤検出されるため）
+  MD040: false # fenced code block の言語指定なし許容
+  MD029: false # 順序リスト番号を連番強制しない（章ごとにリセットする目次等）
+  MD032: false # リスト前後の空行を強制しない（順序リストと箇条書きの混在）
+  MD041: false # 最初の行が H1 でなくても OK（frontmatter）
+
+ignores:
+  - node_modules/**
+  - github/**

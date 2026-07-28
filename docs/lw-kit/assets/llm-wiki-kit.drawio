@@ -1,0 +1,112 @@
+<mxfile host="Electron">
+  <diagram name="ページ-1" id="_r-TS5nGNET0yODY2-V-">
+    <mxGraphModel dx="964" dy="723" grid="1" gridSize="10" guides="1" tooltips="1" connect="1" arrows="1" fold="1" page="1" pageScale="1" pageWidth="827" pageHeight="1169" math="0" shadow="0">
+      <root>
+        <mxCell id="0" />
+        <mxCell id="1" parent="0" />
+        <mxCell id="He22YRQiiQvtJQay66LY-16" edge="1" parent="1" source="He22YRQiiQvtJQay66LY-1" style="edgeStyle=orthogonalEdgeStyle;rounded=0;orthogonalLoop=1;jettySize=auto;html=1;exitX=0;exitY=0.25;exitDx=0;exitDy=0;entryX=1;entryY=0.5;entryDx=0;entryDy=0;" target="He22YRQiiQvtJQay66LY-5">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="He22YRQiiQvtJQay66LY-24" edge="1" parent="1" source="He22YRQiiQvtJQay66LY-1" style="edgeStyle=orthogonalEdgeStyle;rounded=0;orthogonalLoop=1;jettySize=auto;html=1;entryX=0.5;entryY=0;entryDx=0;entryDy=0;" target="He22YRQiiQvtJQay66LY-23">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="He22YRQiiQvtJQay66LY-25" connectable="0" parent="He22YRQiiQvtJQay66LY-24" style="edgeLabel;html=1;align=center;verticalAlign=middle;resizable=0;points=[];" value="add-dir" vertex="1">
+          <mxGeometry relative="1" x="-0.05" y="2" as="geometry">
+            <mxPoint x="18" as="offset" />
+          </mxGeometry>
+        </mxCell>
+        <mxCell id="He22YRQiiQvtJQay66LY-1" parent="1" style="rounded=0;whiteSpace=wrap;html=1;align=left;verticalAlign=top;fillColor=#ffe6cc;strokeColor=#d79b00;" value="&amp;nbsp;my-wiki(ワークスペース)" vertex="1">
+          <mxGeometry height="320" width="300" x="310" y="80" as="geometry" />
+        </mxCell>
+        <mxCell id="He22YRQiiQvtJQay66LY-20" edge="1" parent="1" source="He22YRQiiQvtJQay66LY-2" style="edgeStyle=orthogonalEdgeStyle;rounded=0;orthogonalLoop=1;jettySize=auto;html=1;entryX=0;entryY=0.5;entryDx=0;entryDy=0;" target="He22YRQiiQvtJQay66LY-3">
+          <mxGeometry relative="1" as="geometry">
+            <Array as="points">
+              <mxPoint x="55" y="320" />
+            </Array>
+          </mxGeometry>
+        </mxCell>
+        <mxCell id="He22YRQiiQvtJQay66LY-26" connectable="0" parent="He22YRQiiQvtJQay66LY-20" style="edgeLabel;html=1;align=center;verticalAlign=middle;resizable=0;points=[];" value="更新" vertex="1">
+          <mxGeometry relative="1" x="0.43" y="2" as="geometry">
+            <mxPoint x="3" y="-13" as="offset" />
+          </mxGeometry>
+        </mxCell>
+        <mxCell id="He22YRQiiQvtJQay66LY-2" parent="1" style="shape=umlActor;verticalLabelPosition=bottom;verticalAlign=top;html=1;outlineConnect=0;" value="ユーザー" vertex="1">
+          <mxGeometry height="60" width="30" x="40" y="130" as="geometry" />
+        </mxCell>
+        <mxCell id="He22YRQiiQvtJQay66LY-15" edge="1" parent="1" source="He22YRQiiQvtJQay66LY-3" style="edgeStyle=orthogonalEdgeStyle;rounded=0;orthogonalLoop=1;jettySize=auto;html=1;entryX=0;entryY=0.75;entryDx=0;entryDy=0;" target="He22YRQiiQvtJQay66LY-1">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="He22YRQiiQvtJQay66LY-27" edge="1" parent="1" style="edgeStyle=orthogonalEdgeStyle;rounded=0;orthogonalLoop=1;jettySize=auto;html=1;entryX=0;entryY=0.5;entryDx=0;entryDy=0;" target="He22YRQiiQvtJQay66LY-23">
+          <mxGeometry relative="1" as="geometry">
+            <Array as="points">
+              <mxPoint x="190" y="505" />
+            </Array>
+            <mxPoint x="190" y="335" as="sourcePoint" />
+            <mxPoint x="320" y="505" as="targetPoint" />
+          </mxGeometry>
+        </mxCell>
+        <mxCell id="He22YRQiiQvtJQay66LY-3" parent="1" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#fff2cc;strokeColor=#d6b656;" value="Claude Code" vertex="1">
+          <mxGeometry height="30" width="90" x="141" y="305" as="geometry" />
+        </mxCell>
+        <mxCell id="He22YRQiiQvtJQay66LY-17" edge="1" parent="1" source="He22YRQiiQvtJQay66LY-5" style="edgeStyle=orthogonalEdgeStyle;rounded=0;orthogonalLoop=1;jettySize=auto;html=1;" target="He22YRQiiQvtJQay66LY-2">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="He22YRQiiQvtJQay66LY-29" connectable="0" parent="He22YRQiiQvtJQay66LY-17" style="edgeLabel;html=1;align=center;verticalAlign=middle;resizable=0;points=[];" value="参照" vertex="1">
+          <mxGeometry relative="1" x="-0.0435" y="1" as="geometry">
+            <mxPoint y="-16" as="offset" />
+          </mxGeometry>
+        </mxCell>
+        <mxCell id="He22YRQiiQvtJQay66LY-5" parent="1" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#e1d5e7;strokeColor=#9673a6;" value="Obsidian&lt;div&gt;&amp;nbsp;/&amp;nbsp;&lt;span style=&quot;background-color: transparent; color: light-dark(rgb(0, 0, 0), rgb(255, 255, 255));&quot;&gt;Editor&lt;/span&gt;&lt;/div&gt;" vertex="1">
+          <mxGeometry height="40" width="90" x="170" y="140" as="geometry" />
+        </mxCell>
+        <mxCell id="He22YRQiiQvtJQay66LY-7" parent="1" style="rounded=0;whiteSpace=wrap;html=1;" value="00_issues" vertex="1">
+          <mxGeometry height="30" width="90" x="354" y="130" as="geometry" />
+        </mxCell>
+        <mxCell id="He22YRQiiQvtJQay66LY-9" parent="1" style="rounded=0;whiteSpace=wrap;html=1;" value="10_raw" vertex="1">
+          <mxGeometry height="30" width="90" x="354" y="183" as="geometry" />
+        </mxCell>
+        <mxCell id="He22YRQiiQvtJQay66LY-10" parent="1" style="rounded=0;whiteSpace=wrap;html=1;" value="30_wiki / 40_project" vertex="1">
+          <mxGeometry height="40" width="90" x="354" y="230" as="geometry" />
+        </mxCell>
+        <mxCell id="He22YRQiiQvtJQay66LY-12" parent="1" style="rounded=0;whiteSpace=wrap;html=1;" value=".claude/" vertex="1">
+          <mxGeometry height="30" width="90" x="500" y="250" as="geometry" />
+        </mxCell>
+        <mxCell id="He22YRQiiQvtJQay66LY-13" parent="1" style="rounded=0;whiteSpace=wrap;html=1;" value="90_report" vertex="1">
+          <mxGeometry height="30" width="90" x="354" y="340" as="geometry" />
+        </mxCell>
+        <mxCell id="He22YRQiiQvtJQay66LY-18" parent="1" style="rounded=0;whiteSpace=wrap;html=1;align=left;verticalAlign=top;fillColor=#dae8fc;strokeColor=#6c8ebf;" value="&amp;nbsp;llm-wiki-kit" vertex="1">
+          <mxGeometry height="220" width="131" x="729" y="140" as="geometry" />
+        </mxCell>
+        <mxCell id="He22YRQiiQvtJQay66LY-21" parent="1" style="rounded=0;whiteSpace=wrap;html=1;" value="templates" vertex="1">
+          <mxGeometry height="30" width="90" x="750" y="247" as="geometry" />
+        </mxCell>
+        <mxCell id="He22YRQiiQvtJQay66LY-22" parent="1" style="rounded=0;whiteSpace=wrap;html=1;" value="docs" vertex="1">
+          <mxGeometry height="30" width="90" x="750" y="188.5" as="geometry" />
+        </mxCell>
+        <mxCell id="He22YRQiiQvtJQay66LY-23" parent="1" style="rounded=0;whiteSpace=wrap;html=1;align=left;verticalAlign=top;fillColor=#d5e8d4;strokeColor=#82b366;" value="&amp;nbsp;他プロジェクト" vertex="1">
+          <mxGeometry height="130" width="300" x="310" y="440" as="geometry" />
+        </mxCell>
+        <mxCell id="He22YRQiiQvtJQay66LY-33" edge="1" parent="1" source="He22YRQiiQvtJQay66LY-31" style="edgeStyle=orthogonalEdgeStyle;rounded=0;orthogonalLoop=1;jettySize=auto;html=1;entryX=1;entryY=0.75;entryDx=0;entryDy=0;libavoidRouting=1;" target="He22YRQiiQvtJQay66LY-1">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="He22YRQiiQvtJQay66LY-34" connectable="0" parent="He22YRQiiQvtJQay66LY-33" style="edgeLabel;html=1;align=center;verticalAlign=middle;resizable=0;points=[];" value="初期データの作成" vertex="1">
+          <mxGeometry relative="1" x="0.2" y="-1" as="geometry">
+            <mxPoint x="1" y="-16" as="offset" />
+          </mxGeometry>
+        </mxCell>
+        <mxCell id="He22YRQiiQvtJQay66LY-31" parent="1" style="rounded=1;whiteSpace=wrap;html=1;" value="setup.sh" vertex="1">
+          <mxGeometry height="30" width="90" x="750" y="305" as="geometry" />
+        </mxCell>
+        <mxCell id="He22YRQiiQvtJQay66LY-39" parent="1" style="rounded=0;whiteSpace=wrap;html=1;" value="50_feedback" vertex="1">
+          <mxGeometry height="30" width="90" x="354" y="288" as="geometry" />
+        </mxCell>
+        <mxCell id="He22YRQiiQvtJQay66LY-41" parent="1" style="shape=cylinder3;whiteSpace=wrap;html=1;boundedLbl=1;backgroundOutline=1;size=15;" value="ソースコード等" vertex="1">
+          <mxGeometry height="80" width="121" x="414" y="465" as="geometry" />
+        </mxCell>
+        <mxCell id="He22YRQiiQvtJQay66LY-43" edge="1" parent="1" source="He22YRQiiQvtJQay66LY-31" style="edgeStyle=orthogonalEdgeStyle;rounded=0;orthogonalLoop=1;jettySize=auto;html=1;innerLoopWaypoints=1;exitX=0.5;exitY=1;exitDx=0;exitDy=0;" target="He22YRQiiQvtJQay66LY-31">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+      </root>
+    </mxGraphModel>
+  </diagram>
+</mxfile>

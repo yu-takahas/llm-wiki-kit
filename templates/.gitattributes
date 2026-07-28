@@ -1,0 +1,4 @@
+# 並列 worktree が log.md 末尾に追記して衝突しても自動マージする
+# merge=union: 両ブランチの追加行を双方残す（重複は出るが lost-update を防ぐ）
+# index.md はセクション構造があり union だと重複 entry が出やすいので対象外（統合時に手で見る）
+log.md merge=union

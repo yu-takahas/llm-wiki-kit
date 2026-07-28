@@ -1,0 +1,6 @@
+.DS_Store
+node_modules/
+.claude/memory/
+.claude/settings.local.json
+.claude/worktrees/
+20_library/books/

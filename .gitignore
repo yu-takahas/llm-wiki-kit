@@ -1,0 +1,9 @@
+.DS_Store
+node_modules/
+.claude/memory/
+.claude/settings.local.json
+.claude/worktrees/
+docs/lw-kit/90_調査/
+*.bkp
+.obsidian/
+.obsidian.vimrc
