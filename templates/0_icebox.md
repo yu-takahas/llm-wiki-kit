@@ -1,5 +1,5 @@
 # 0_icebox
 
-## 🧊 ICEBOX（いつか降らせたいもの）
+## 🧊 ICEBOX
 
 （保留中の issue）
