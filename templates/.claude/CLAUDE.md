@@ -65,9 +65,9 @@ kit を移動したらこの行を書き換える。削除した場合は設計�
   例: `30_wiki/foo.md` / `10_raw/20260517_xxx.md` / `YYYYMMDD_*.md` / `Bash(rm *)`
   理由: prettier の Markdown formatter は単独 `_` を emphasis マーカーと解釈して `*` に正規化、逆に単独 `*` 同士をペアと認識して `_` に変換するため（CommonMark 仕様）。
 - セクション参照に「§」を使わない（応答・思考含む）。書き方は「<節名>」セクション / 番号節は「セクション N」/ 入れ子は「「親」セクションの「子」」。citation の locator も「<section>」表記（§ 不使用）。「§」自体を語る言及（失敗事例・禁止例）は例外。
-- wiki page / issue / library への参照は `[[link]]` で書く（パス `30_wiki/Foo.md` ではなく `[[Foo]]`）。
+- wiki page / issue / library / feedback への参照は `[[link]]` で書く（パス `30_wiki/Foo.md` ではなく `[[Foo]]`）。
   パスは mv / rename で壊れるが、`[[link]]` なら Obsidian が自動追従する。
-  解決: `find 00_issues/ 20_library/ 30_wiki/ 40_project/ -name "Foo.md"` でファイルパスが得られる。タイトルは全体で一意。
+  解決: `find 00_issues/ 20_library/ 30_wiki/ 40_project/ 50_feedback/ -name "Foo.md"` でファイルパスが得られる。タイトルは全体で一意。
   例外: `.claude/` 配下のファイルは Claude Code が直接 Read する設定ファイルなのでパスで書く。
   例外: frontmatter `sources:` の `10_raw/` パスはパスのまま（`wiki.md` の規約通り）。
   例外: ディレクトリ自体の説明（「`30_wiki/` 配下の」等）やファイル名の例示はパスで書く。

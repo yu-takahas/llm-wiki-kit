@@ -14,12 +14,14 @@ updated: 2026-07-28
 llm-wiki-kit ワークスペース固有の CLAUDE.md / rules / skills 運用と、その背景にある設計判断。
 [[Claude-Codeのメモリ階層]] が一般論、本ページは llm-wiki-kit での具体決定。
 
-## 現在の構成
+**本ページは決定根拠のみを持つ。** 書式・具体値・列挙は `.claude/CLAUDE.md` と各 rule が正本。
 
-- `.claude/CLAUDE.md`: ワークスペース普遍ルール（ディレクトリ構造の地図、wiki / log / issue 誘導、文書規約、Git 規約）
-- `.claude/rules/`: wiki.md / wiki-style.md / project.md / issue.md / log-index.md / skeleton-confirm.md。各 rule の役割・`paths`・設計指針は [[lw-kit-詳細設計-rules]] に集約
-- `.claude/skills/`: `/lw-archive-weekly` `/lw-render` 等の個別タスク
-- auto memory: `~/.claude/projects/<ワークスペースのパスをエンコードしたディレクトリ>/memory/` にユーザー個人の好み（commit type の選好、パッケージマネージャ、作業の進め方、報告の粒度等）。リポジトリ外に置かれるため kit の配布対象には含まれない
+## 層の使い分け
+
+- `.claude/CLAUDE.md`: ワークスペース普遍ルール。何をどこで管理するかの index に徹する
+- `.claude/rules/`: 領域別の規約。構成と設計指針は [[lw-kit-詳細設計-rules]] に集約
+- `.claude/skills/`: 個別タスクのワークフロー
+- auto memory: リポジトリ外（`~/.claude/projects/<エンコードしたパス>/memory/`）に置かれるユーザー個人の好み（commit type の選好、パッケージマネージャ、作業の進め方、報告の粒度等）。kit の配布対象には含まれない
 
 ### `$KIT` の定義
 
@@ -27,9 +29,7 @@ llm-wiki-kit ワークスペース固有の CLAUDE.md / rules / skills 運用と
 `setup.sh` が生成時に placeholder を clone 元の実パスに置換する（[[lw-kit-詳細設計-setup.sh]]）。
 
 skill / guide / rules が設計書と規範を `$KIT/docs/...` で指すため、ワークスペース側に定義がないと参照が解決しない。
-参照の書き分けは「配布物（`templates/` 配下）から kit 側を指す時は `$KIT` 起点、kit の `docs/` 配下同士は `[[link]]`」。
-判断の根拠は [[lw-kit-ガイド設計-skill-guide]]「決定」セクション。
-判断の経緯は [[lw-kit-ガイド設計-skill-guide]]「決定」セクション。
+参照の書き分けの規約と判断の根拠は [[lw-kit-ガイド設計-skill-guide]]「決定」セクション。
 
 ## 他 page からの参照
 
@@ -37,49 +37,31 @@ skill / guide / rules が設計書と規範を `$KIT/docs/...` で指すため�
 `.claude/CLAUDE.md` を直接指さない。
 CLAUDE.md の構成（セクション追加 / リネーム / 分割）が変わったとき、直参照していた page の参照が一斉に壊れるのを防ぐため。
 本 page が CLAUDE.md への参照を集約するハブになる。
-グローバル（`~/.claude/CLAUDE.md`）とプロジェクト（`.claude/CLAUDE.md`）の対応は本ページの該当セクションを参照。
 rules も同じ構造で、[[lw-kit-詳細設計-rules]] がハブ。全 skill は project-local（`.claude/skills/` 配下）に統一している。
 
 ## wiki link の解決
 
-CLAUDE.md の文書規約は `[[link]]` で書くことを指示しているが、`[[Foo]]` から `Foo.md` を見つける方法を教えていなかった。
-fresh session の Claude Code が `[[link]]` に初めて出会うと、解決手段がないので CLAUDE.md に `find` コマンドを明記して初見でも 1 手で辿れるようにする。
+CLAUDE.md は `[[link]]` で書くことを指示するので、`[[Foo]]` から `Foo.md` を見つける手段も同じ場所に置く。
+fresh session の Claude Code は `[[link]]` に初見で出会った時に解決手段を持たないため、`find` コマンドを明記して 1 手で辿れるようにする。
 
-`index.md` を Read して一覧から探す方法もあるが、300 行を context に載せるコストに対して `find` 1 発の方が軽い。
-`index.md` は「何があるか」を知りたい時に読むもので、link 解決のために使う必要はない。
+`index.md` を Read して一覧から探す方法は採らない。
+300 行を context に載せるコストに対して `find` 1 発の方が軽く、`index.md` は「何があるか」を知りたい時に読むもので link 解決には要らない。
 
-解決先は 4 ディレクトリ:
+名前だけで 1 件に特定できるのは、タイトルがワークスペース全体で一意であることが前提。
+この前提が崩れると `find` は複数件を返し、解決手段として成立しなくなる。
 
-- `00_issues/` 配下（状態フォルダ `.10_todo/` / `.00_icebox/` / `.90_fixed/` / `.99_faded/` を含むため再帰検索）
-- `20_library/` 配下
-- `30_wiki/` 直下（フラット）
-- `40_project/` 配下（`<案件>/` 内で段を切ることがあるため再帰検索）
-
-タイトルはワークスペース全体で一意なので、名前だけで 1 件に特定できる。
-CLAUDE.md には `find 00_issues/ 20_library/ 30_wiki/ 40_project/ -name "<title>.md"` の 1 行を追記する。
+検索対象のディレクトリは CLAUDE.md のコマンドが持つ。
+`[[link]]` で参照する置き場が増えたら、そのコマンドに足す。
 
 ## Git 規約の llm-wiki-kit 固有判断
 
 書式・例は `.claude/CLAUDE.md` を参照。本ページは決定根拠のみ。
 
-- type の好み: `fix` > `chore`、`feat` / `fix` / `refactor` を優先（`docs` / `chore` は使わない）
-- project 命名: 作業の主旨で決める（案件・シリーズ主導 → サブディレクトリ名 / 汎用 → ナンバリングディレクトリ名から数字を落とす / ルートファイル → `llm-wiki-kit`）。数字落とし採用はフラット運用整合（旧「1 つ下のサブディレクトリ名」が当時のサブディレクトリ非作成方針と矛盾したため）。案件名 scope への拡張は、case 単位 render の主旨を「変更数最多」が潰す誤適用が根本原因（経緯はワークスペース側の issue / log / commit に残る）
+- type の選好: kit は決めない。どの type を優先するかは利用者ごとに違うので auto memory 層に属する。CLAUDE.md が 5 種を並べているのはそのため
+- project 命名で数字落としを採るのは、フラット運用との整合による（「1 つ下のサブディレクトリ名」を採ると、サブディレクトリを作らない方針と矛盾する）
+- project 命名を主旨で決めるのは、「変更数最多」で決めると case 単位の作業の主旨が潰れるため
 - ブランチ戦略: 作業ごとに新規ブランチを切る
 - remote push 禁止: GitHub / Bitbucket / AWS CodeCommit いずれも、個人情報や secrets 混入リスクのため
-
-## 旧運用 → 新運用の対比
-
-LLM Wiki 化に伴い、以下のルールが置き換わった。
-
-| 領域         | 旧（〜2026-05-13）                                                                 | 新（2026-05-14〜）                                                                       |
-| ------------ | ---------------------------------------------------------------------------------- | ---------------------------------------------------------------------------------------- |
-| ファイル命名 | `YYYYMMDD_タイトル.md`                                                             | タイトルそのまま、`30_wiki/<タイトル>.md` フラット                                       |
-| frontmatter  | `title / created_at / updated_at / source / tags`                                  | `type / tags / sources / created / updated`（2026-05-21 で title 撤廃、旧版は 6 fields） |
-| 段階管理     | `20_canvas/` → `30_series/` → `40_gallery/` → `50_masterpiece/` のディレクトリ移動 | `/lw-render` イベント + `30_wiki/` フラット運用                                          |
-| 進行中タスク | 設計ファイル末尾の `## TODO` セクション                                            | `00_issues/<name>.md`（[[lw-kit-詳細設計-issue]]）                                       |
-| schema 場所  | （明文化なし）                                                                     | `.claude/rules/wiki.md`（`paths:` 条件付きロード）                                       |
-
-旧運用の資料（`20260304_*.md` 等）は元の path に残るが、新規ファイルは新運用に従う。
 
 ## 不採用にした設計選択
 
@@ -100,7 +82,7 @@ LLM Wiki 化に伴い、以下のルールが置き換わった。
 
 - CLAUDE.md はワークスペース全体に必要な普遍ルールだけに絞る
 - `30_wiki/` 配下の schema は `.claude/rules/wiki.md` が `paths` 条件付きで担う、CLAUDE.md には書き写さない
-- サイズは [[Claude-Codeのメモリ階層]] のサイズ規律に従って 200 行未満を目指す
+- サイズは [[Claude-Codeのメモリ階層]] のサイズ規律に従う（具体値は下の検算チェックリスト）
 - 冗長な解説は wiki page に置き、CLAUDE.md は「何をどこで管理するかの index」に徹する
 - 詳細な手順や個別の決定根拠は実践ノウハウに沿って wiki page 側に置く
 
@@ -113,6 +95,7 @@ CLAUDE.md を改訂した後、以下を確認する。
 - 「wiki / rules / skills の使い分け」が CLAUDE.md 単独で読み取れるか
 - 詳細な解説が紛れ込んでいないか（紛れていれば wiki page へ移す）
 - リスト項目の見出し的太字を多用していないか（フィードバック反映）
+- 本ページが実物の具体（コマンド・列挙・書式）を写していないか。写しは実物と一緒にずれる
 
 ## 関連
 
