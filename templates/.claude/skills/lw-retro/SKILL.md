@@ -6,7 +6,7 @@ allowed-tools: [Read, Edit, Write, Glob, "Bash(git diff*)", "Bash(git status*)",
 disable-model-invocation: true
 ---
 
-# retro
+# lw-retro
 
 反映（＝振り返り）に特化した探索 skill。
 観察を集め、反映先を判断し、骨子確認して反映する。

@@ -79,6 +79,7 @@ shutdown: ユーザーの確認を得てから、各 teammate に `SendMessage({
 2. issue の `related:` / `sources:` / 本文のリンク先を「関連資料」として列挙する
 3. fable を spawn する。prompt の要点:
    - issue と関連資料を読んで内容を把握する
+   - 報告は `SendMessage({to: "team-lead", ...})` で返す。プレーンテキスト出力は lead に届かない
    - 把握したら「読み終わりました」と報告して待機する
    - 明確な指示があるまで自分からは動かない
    - `log.md` / `index.md` / `1_issues.md` / `2_done.md` は触らない（lead が管理するファイル）
@@ -130,6 +131,7 @@ teammate 構成・運用に関する制約。フロー横断で適用する。
 - teammate name は役割名を優先（`researcher` / `reviewer` / `advisor` 等）。汎用 `worker-N` は役割が決まらない場合のフォールバック
 - 引数なし時のタスクは lead が決めない、ユーザー投入を待つ。文脈推測でタスクを teammate に押し付けない
 - ユーザーが lead に直接依頼した作業は teammate に二次委譲しない（依頼宛先のシグナルを優先）
+- teammate の briefing prompt に報告経路を書く。`SendMessage({to: "team-lead", ...})` で返すこと、プレーンテキスト出力は lead に届かないこと、考えがまとまった時点で途中でも打つことの 3 点。書かないと teammate は報告したつもりで届かず、lead 側には idle 通知だけが見える
 - teammate の briefing prompt に「触らないファイルリスト」を含める（`log.md` / `index.md` / `1_issues.md` / `2_done.md` / 他 teammate 担当ファイル等。lead 集約で管理するファイルを teammate が個別更新すると衝突する）
 - teammate は作業開始前にアプローチを lead に報告する。lead はアプローチが妥当と判断したらユーザーに確認せず承認してよい
 - lead は teammate を shutdown する前に必ずユーザーに「cleanup 進めていい?」を確認する

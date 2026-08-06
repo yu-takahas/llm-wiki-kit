@@ -9,7 +9,7 @@ sources:
   - "[[プロンプト設計原則]]"
   - conversation
 created: 2026-05-27
-updated: 2026-07-26
+updated: 2026-08-06
 ---
 
 # llm-wiki-kit の retro skill 設計
@@ -35,7 +35,7 @@ graph LR
 
 ## なぜ /commit から剥がすか（exploration collapse との同型）
 
-`/lw-commit` の step1（反映）は畳む文脈では慣性が働き、反映対象を拾わないまま終わりやすい。
+反映を畳む文脈（`/lw-commit`）に置くと慣性が働き、反映対象を拾わないまま終わりやすい。
 実例として、あるセッションで「反映: 該当なし」と報告したが、改めて問い直すと観察が複数出てきた。
 
 理論的裏づけは [[探索・活用ジレンマ]]。
@@ -113,7 +113,7 @@ git は read-only（diff / status のみ、add / commit は `/lw-commit` の責�
 | 5   | 骨子提示・確認・反映 | 反映の骨子を lead に提示 → 確認 → 反映（自走度 2 段、本ページ「反映の自走度」セクション）                                           | 反映は副作用があるので確認を挟む。探索の出口                                        |
 
 責務 3 のリファクタ検討は棚卸し＝探索の所作。
-活用フロー（`/lw-commit`）に同居させると `/lw-commit` の step1（反映）と同じく autopilot が「該当なし」で流すため `/lw-retro` が持つ（[[lw-kit-スキル設計-lw-commit]] の「リファクタ検討は `/lw-retro` に委譲」と相互対応）。
+活用フロー（`/lw-commit`）に同居させると、反映と同じく autopilot が「該当なし」で流すため `/lw-retro` が持つ（[[lw-kit-スキル設計-lw-commit]] の「反映の実行を `/lw-retro` に一本化した」と同じ理由）。
 `git diff --stat` で変更量を確認し、変更量が大きいファイルから優先的に見直す。
 大きく直したファイルほど複数回の Edit で不整合が入りやすく、リファクタの必要性が高い。
 軽い commit ほど「◯月✗日追記: ...」と履歴を継ぎ足す劣化が出やすく、これを警戒する。
@@ -209,7 +209,7 @@ why:
 
 - 観察の反映は `/lw-retro` が持ち、`/lw-commit` は持たない（`/lw-commit` は Write なしの畳む専念、[[lw-kit-スキル設計-lw-commit]]）
 - リファクタ検討も `/lw-retro` が持つ（観察の反映と同じ探索 collapse 理由）
-- `/lw-commit` に残るのは機械的な先叩き（format / lint）まで
+- `/lw-commit` に残るのは issue と台帳の記録 / add / commit まで（format / lint の検査は pre-commit hook が持つ）
 - `/lw-commit` は畳む（活用）に専念、`/lw-retro` は振り返る（探索）に専念
 
 skill family の対応:
@@ -265,7 +265,7 @@ retro の末尾に置く理由:
 
 ## 関連
 
-- [[lw-kit-スキル設計-lw-commit]] — 対の活用側 skill（畳む側）。リファクタ検討・step1 反映の委譲元、設計書の型
+- [[lw-kit-スキル設計-lw-commit]] — 対の活用側 skill（畳む側）。リファクタ検討・反映の委譲元、設計書の型
 - [[探索・活用ジレンマ]] — 設計の理論的裏づけ（exploration collapse）
 - [[Temperature]] — 探索モード宣言（D）のメタファ
 - [[プロンプト設計原則]] — モード・停止条件の明示（探索強制の裏づけ）

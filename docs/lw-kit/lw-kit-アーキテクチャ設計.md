@@ -5,7 +5,7 @@ sources:
   - conversation
   - "[[ソフトウェア設計ドキュメント体系]]"
 created: 2026-07-24
-updated: 2026-07-26
+updated: 2026-08-07
 ---
 
 # llm-wiki-kit アーキテクチャ設計
@@ -174,6 +174,7 @@ graph LR
 - **fresh context**: レビューは会話の文脈を切った状態で行う。文脈を知っている人が採否を判断し、知らない人が独立にチェックする
 - **project-local 統一**: 全 skill はワークスペースの `.claude/skills/` に置く。グローバルにする必要がない
 - **触らないファイルを明示する**: チームメイトに仕事を頼むとき、触ってほしくないファイルを先に伝える
+- **名前を 3 箇所で揃える**: ディレクトリ名 / frontmatter `name` / SKILL.md の H1 を同じ `lw-<name>` にする。`lw-` prefix は built-in skill との衝突回避（[[Claude-Code-Skillの書き方]]「配置場所」）。H1 に説明を足したくなったら、H1 は名前だけにして説明は直下のリード行に置く
 
 ## 用語集
 

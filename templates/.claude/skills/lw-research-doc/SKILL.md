@@ -6,7 +6,9 @@ allowed-tools: WebFetch, WebSearch, Write, Read
 argument-hint: "<URL or キーワード>"
 ---
 
-# lw-research-doc - Web調査ドキュメント生成スキル
+# lw-research-doc
+
+URL またはキーワードを調査し、markdown ドキュメントを生成する skill。
 
 対象: `$ARGUMENTS`
 

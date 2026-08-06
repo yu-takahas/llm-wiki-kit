@@ -6,7 +6,7 @@ allowed-tools: [Read, Write, Edit, Agent, Glob, "Bash(mkdir -p /tmp/lw-review*)"
 argument-hint: "<ファイルパスまたは自然言語> [--quick|--full|--profile=<種別>]"
 ---
 
-# doc-review
+# lw-doc-review
 
 層別 finder 並列 → merge → 指摘ファイル出力に特化した skill。
 修正は `/lw-fix-review` が担う（doc-review は指摘のみ）。

@@ -8,7 +8,7 @@ sources:
   - "superpowers"
   - "[[テスト駆動開発の実践]]"
 created: 2026-07-17
-updated: 2026-07-26
+updated: 2026-08-06
 ---
 
 # llm-wiki-kit の TDD skill 設計
@@ -210,8 +210,9 @@ superpowers の Verification Checklist（完了前 8 項目）は採用しない
 案件 CLAUDE.md の開発ワークフローセクションが nudge（いつ `/lw-tdd` を使うか）、本 skill が手順を回す補完関係。
 連携判断:
 
-- `/lw-commit` の言い訳対戦表に「テストは緑のはず → 先に走らせて確認」を 1 行追加（skill を使わなかった場合の安全網）
 - `/lw-retro` に TDD 観点チェック（Red 飛ばし / 過剰実装の振り返り）を追加
+
+`/lw-commit` 側には安全網を置かない。同 skill が回るのは wiki ワークスペースで、テストスイートを持たないため。
 
 ## 保守規律
 
@@ -230,5 +231,5 @@ superpowers の Verification Checklist（完了前 8 項目）は採用しない
 - matlugert-tdd-skill — 骨格を借りる TDD skill（71 行、MIT）
 - superpowers — Verify RED / Verify GREEN を移植する開発手法プラグイン（371 行 TDD skill、MIT）
 - [[テスト駆動開発の実践]] — Kent Beck TDD 本の要約（Red-Green-Refactor / TODO リスト駆動）
-- [[lw-kit-スキル設計-lw-commit]] — commit skill（skill 終端で連携、言い訳対戦表に 1 行追加）
+- [[lw-kit-スキル設計-lw-commit]] — commit skill（skill 終端で連携）
 - [[lw-kit-スキル設計-lw-retro]] — 振り返り skill（TDD 観点チェック追加）

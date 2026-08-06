@@ -5,7 +5,7 @@ sources:
   - conversation
   - 10_raw/20260715_claude-code-agent-teams-cmux調査.md（ワークスペース側の raw）
 created: 2026-04-16
-updated: 2026-07-26
+updated: 2026-08-07
 ---
 
 # llm-wiki-kit の lw-cmux-teams skill 設計
@@ -127,6 +127,7 @@ advisor のモデルに fable を選んだ理由: 考え込まなくても賢い
 - 二次委譲禁止: 同事故の派生（ユーザーが lead に直接依頼した作業を worker に回した）の再発防止
 - 触らないファイルリスト: 2026-05-22 の事故（worker 4 名が log.md / index.md を勝手更新）の再発防止。fresh-context の teammate は CLAUDE.md のセルフチェックに従って正しく動くが、lead 集約方針と衝突する
 - 一時 subagent の name なし spawn: `name` の有無が teammate（管理対象・SendMessage 宛先）と使い捨て subagent の境界になるため。name 付きで呼ぶと teammate 化する
+- briefing に報告経路を書く: teammate のプレーンテキスト出力は lead に届かず、`SendMessage` を呼ばないと報告にならない。書かないと teammate は報告したつもりで待機し、lead 側には idle 通知だけが届く。idle は報告の不在を意味しないので、この状態は催促でも判別できない
 
 ## 運用 / Troubleshooting
 

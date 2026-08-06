@@ -6,7 +6,7 @@ allowed-tools: [Read, Write, Edit, Glob, Grep, "Bash(wc:*)"]
 disable-model-invocation: true
 ---
 
-# render
+# lw-render
 
 raw（`10_raw/<file>.md`）を llm-wiki（`30_wiki/` 汎用 / `40_project/<案件>/` 案件固有）に render する skill。
 

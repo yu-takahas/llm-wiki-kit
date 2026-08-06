@@ -5,7 +5,7 @@ disable-model-invocation: true
 allowed-tools: Read, Edit, Write
 ---
 
-# 週次アーカイブスキル（sprint review）
+# lw-archive-weekly
 
 `2_done.md` / `1_issues.md` / `0_icebox.md` の完了・確定・廃棄タスクを週次アーカイブに保存し、盤面をリセットする。
 

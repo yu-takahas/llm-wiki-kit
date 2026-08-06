@@ -7,7 +7,7 @@ sources:
   - "[[lw-kit-スキル設計-lw-commit]]"
   - "[[lw-kit-詳細設計-issue]]"
 created: 2026-07-08
-updated: 2026-08-05
+updated: 2026-08-06
 ---
 
 # llm-wiki-kit の update-issue skill 設計
@@ -159,21 +159,20 @@ Write を持たない理由: 本 skill は既存 issue ファイルの更新に�
 
 ## 責務の境界
 
-### `/lw-commit` step 2 との切り分け
+### `/lw-commit` step 1 との切り分け
 
-issue の更新ロジックは `/lw-update-issue` に一本化する。
-`/lw-commit` step 2 は自分で issue を編集せず、更新済みかどうかを確認するガード役に徹する。
+issue の更新ロジックの正本は `/lw-update-issue`。
+`/lw-commit` step 1 は最新化されているかを確認し、未反映なら手順の有無で分岐する。
 
-| 観点       | `/lw-commit` step 2（ガード）                                      | `/lw-update-issue`（実行）                   |
-| ---------- | ------------------------------------------------------------------ | -------------------------------------------- |
-| 役割       | issue が最新化されているか確認、未更新なら `/lw-update-issue` 起動 | 💧/🌂 の上書き + 🪣 経緯への降ろし + ☔ 更新 |
-| 自分で編集 | しない                                                             | する（skill の中核機能）                     |
-| FIXED 判断 | TODO 全完了時に FIXED 化を lead に確認                             | 状態遷移しない（WIP のまま更新に専念）       |
+| 観点       | `/lw-commit` step 1                      | `/lw-update-issue`（正本）                   |
+| ---------- | ---------------------------------------- | -------------------------------------------- |
+| 役割       | 最新化されているか確認し、未反映なら分岐 | 💧/🌂 の上書き + 🪣 経緯への降ろし + ☔ 更新 |
+| 自分で編集 | 手順が context にある場合のみ            | する（skill の中核機能）                     |
+| FIXED 判断 | TODO 全完了時に FIXED 化を lead に確認   | 状態遷移しない（WIP のまま更新に専念）       |
 
-commit 時に issue が最新化されていることを保証するため、`/lw-commit` step 2 は「update-issue が済んでいなければ代わりに起動する」フォールバックとして機能する。
-更新ロジックの重複を避け、🪣 経緯への降ろしが commit 前に必ず行われる。
-
-`/lw-commit` SKILL.md の step 2（issue 最新化）にも反映済み。
+`/lw-update-issue` は `disable-model-invocation: true` なので `/lw-commit` からは起動できない。
+未反映のときは、今セッションで `/lw-update-issue` が起動済みで手順が context にあれば `/lw-commit` が自分で更新し、無ければ lead に起動を依頼して止まる。
+分岐の線を手順の有無に引く理由（止めたいのは更新そのものでなく、選別基準を持たない更新）は [[lw-kit-スキル設計-lw-commit]]「全 3 ステップの実行順と why」が持つ。
 
 ## 実行ステップと why
 
@@ -200,11 +199,11 @@ issue の内容改訂を `log.md` に記録しない判断は [[lw-kit-詳細設
 
 - 本設計書と SKILL.md の同期: SKILL.md を Edit したターンで本設計書の `updated:` も揃える
 - [[lw-kit-詳細設計-issue]] 変更時の追従: 🪣 経緯やファイル内部構造を Edit した時、SKILL.md のステップ記述と齟齬がないか確認する
-- `/lw-commit` step 2 変更時の確認: `/lw-commit` SKILL.md の step 2 を Edit した時、本設計書「責務の境界」の比較表が崩れていないか確認する
+- `/lw-commit` step 1 変更時の確認: `/lw-commit` SKILL.md の step 1 を Edit した時、本設計書「責務の境界」の比較表が崩れていないか確認する
 
 ## 関連
 
 - [[lw-kit-詳細設計-issue]] — issue 概念 + 内部構造の SSOT（🪣 経緯の規約追記先）
-- [[lw-kit-スキル設計-lw-commit]] — `/lw-commit` step 2 が issue 最新化を持つ、責務の境界
+- [[lw-kit-スキル設計-lw-commit]] — `/lw-commit` step 1 が issue 最新化を持つ、責務の境界
 - [[lw-kit-スキル設計-lw-create-issue]] — 設計書の型 + 起票側の対（create / update の責務分担）
 - [[lw-kit-アーキテクチャ設計]] — ライフサイクルファミリーでの位置づけ

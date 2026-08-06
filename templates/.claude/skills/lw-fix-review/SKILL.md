@@ -6,7 +6,7 @@ allowed-tools: [Read, Edit, Write, Glob, Grep]
 argument-hint: "<review-source> [<target-file>]"
 ---
 
-# lw-fix-review - レビュー結果を lead 自走採否で反映 + 知見蓄積
+# lw-fix-review
 
 入力: `$ARGUMENTS` でレビュー結果を受け取る（`/tmp/lw-review/` / 会話内テキスト / 対象ファイル明示）。
 
