@@ -1,6 +1,6 @@
 # CLAUDE.md
 
-This file provides guidance to Claude Code (claude.ai/code) when working with code in this repository.
+この wiki ワークスペースで Claude Code が従う規約をまとめたファイル。
 
 ## ディレクトリ構造
 
@@ -10,11 +10,12 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 20_library/         本の目次 wiki + PDF 置き場（`books/` サブディレクトリに本体）
 30_wiki/            wiki ページ（汎用知識、フラット運用）
 40_project/         案件固有 wiki ページ（案件名サブディレクトリ）
-50_feedback/        フィードバック（行動指針・作業観察・失敗事例）
+50_feedback/        フィードバック（観察・知見・プロファイル・指針）
 90_reports/weekly/  週次アーカイブ
 ```
 
-ライフサイクル: `10_raw/` → `30_wiki/`（汎用）または `40_project/<案件>/`（案件固有）→ `90_reports/weekly/`
+ライフサイクル: `10_raw/` → `30_wiki/`（汎用）または `40_project/<案件>/`（案件固有）
+`90_reports/weekly/` に入るのは wiki page ではなく盤面のタスク（`1_issues.md` / `2_done.md` / `0_icebox.md` から週次で移す）。
 ルート: `index.md`（wiki カタログ）/ `log.md`（操作履歴）/ `0_icebox.md`（ICEBOX）/ `1_issues.md`（WIP / TODO）/ `2_done.md`（FIXED / FADED）
 
 ## llm-wiki-kit への参照
@@ -22,28 +23,42 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 `$KIT` = `__LLM_WIKI_KIT_PATH__`
 
 このワークスペースを生成した llm-wiki-kit の場所（`setup.sh` が実パスを埋める。`__` で囲まれたままなら未設定なので、clone 先のパスに書き換える）。
+`$KIT` は文書中のパス表記で、shell の環境変数ではない。
+`setup.sh` が置換するのはこのファイルだけなので、コマンドや Read で使う時は上の行の実パスに置き換える。
 
 skill / guide / rules が `$KIT/docs/...` を指しているのは、設計判断の why（`docs/lw-kit/`）と規範（`docs/knowledge/`）が kit 側にあるため。
 `docs/lw-kit/` はワークスペースにコピーされない。`docs/knowledge/` は必要なものを手動で `30_wiki/` に取り込める。
-kit を移動したらこの行を書き換える。削除した場合は設計書を辿れなくなるだけで、ワークスペースの運用自体に支障はない。
+kit を移動したらこの行を書き換える。
+kit を削除した場合は設計書を辿れなくなるだけで、ワークスペースの運用自体に支障はない。
 
-参照の書き分け: このワークスペース内のファイルは相対パス、kit 側のファイルは `$KIT` 起点で書く。
+## 規約と手順の置き場
 
-## wiki
+- 領域別の規約は `.claude/rules/` が持つ（対象ファイルを Read した時に自動でロードされる）
+- 多段の手順は `.claude/skills/` が持つ（`/lw-<name>` で起動する）
 
-- `.claude/rules/wiki.md`: wiki schema 規約（`30_wiki/` / `40_project/` 共通）
-- `.claude/rules/wiki-style.md`: `30_wiki/` 配下のスタイル規約
-- `.claude/rules/project.md`: `40_project/` 配下の案件固有規約
-
-詳細は各ファイルを参照。
+どちらも中身はファイルのリード文が宣言している。
 
 ## 作業スタイル
 
 セッション開始時に `50_feedback/feedback-指針-行動指針.md` を読む（作業スタイルから抽出した Claude の振る舞い指針）。
 
+### 応答の量
+
+主要な回答に分量を割き、前置き・留保・補足は短く抑える。
+説明を求められたら要点の要約で返す。
+詳細な説明は明示的に求められた時だけ書く。
+
+### 作業中の報告
+
+最初のツール呼び出しの前に、これから何をするかを 1 文で書く。
+作業中の更新は、重要な発見があった時と方向を変える時だけにする。
+終わったら結果から書く。
+1 文目が「何が起きたか」「何が分かったか」に答え、詳細はその後に置く。
+
 ## log / index
 
-成果物（wiki page / issue の状態 / 設定ファイル）が実質的に動いたら、`log.md` に 1 行追記する。
+ファイルの作成・編集・移動・削除を行ったら、`log.md` に 1 行追記する（対象は wiki page / issue の状態 / 設定ファイル）。
+調査・読解だけで成果物が動いていない回は書かない。
 エントリは編集回数でなく成果物の変化で数える（1 セッション内で同じファイルを何度も編集しても 1 行にまとめる）。
 `30_wiki/` / `40_project/` の page 増減・rename 時は `index.md`、`00_issues/` の出入り時は `1_issues.md` / `2_done.md` も更新する。
 記入時の具体は `.claude/rules/log-index.md` が正本。
@@ -53,7 +68,7 @@ kit を移動したらこの行を書き換える。削除した場合は設計�
 
 ユーザー報告を返す前に必ず確認する:
 
-- このターンで成果物が実質的に動いていれば `log.md` に記録されているか（編集回数でなく変化の単位で数える）
+- このターンでファイルを作成・編集・移動・削除していれば `log.md` に記録されているか（編集回数でなく変化の単位で数える）
 - page の増減 / rename があれば `index.md`、issue の出入りがあれば `1_issues.md` / `2_done.md` も更新したか
 - 未記録があれば、いまここで追記してから報告
 
@@ -71,6 +86,8 @@ kit を移動したらこの行を書き換える。削除した場合は設計�
   例外: `.claude/` 配下のファイルは Claude Code が直接 Read する設定ファイルなのでパスで書く。
   例外: frontmatter `sources:` の `10_raw/` パスはパスのまま（`wiki.md` の規約通り）。
   例外: ディレクトリ自体の説明（「`30_wiki/` 配下の」等）やファイル名の例示はパスで書く。
+  例外: Claude が Read する対象としてパスを直接示す必要がある場合はパスで書く。
+- リポジトリ外ファイルへの参照はパス表記（コードスパン囲み）で書く（例: `$KIT/docs/lw-kit/30_詳細設計/lw-kit-詳細設計-rules.md`）
 - 口語的な比喩や属人的な言い方を使わず、何が起きるかを書く（「腐る」→「参照が解決しなくなる」/「〜に染み付いている」→「運用として定着している」）。文脈を持たない読者に読まれるため。
   対象は wiki page / 設計書 / rule / SKILL.md（issue と会話応答は作業ログなので除く）。
 
