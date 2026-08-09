@@ -17,4 +17,5 @@ config:
   MD041: false # 最初の行が H1 でなくても OK（frontmatter）
 
 ignores:
-  - node_modules/**
+  - "**/node_modules/**" # 階層を問わず除外（worktree 配下の依存も含む）
+  - ".claude/worktrees/**" # 作業コピーは正本側で lint 済み
