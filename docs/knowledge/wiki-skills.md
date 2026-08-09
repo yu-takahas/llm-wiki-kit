@@ -246,7 +246,7 @@ llm-wiki は 3 カラム化（type / 対象パス / 説明）に拡張、type �
 
 ## ingest skill 設計の深掘り
 
-`10_raw/llm-wiki/20260515_wiki-skills_skill群調査.md` で得た知見の要点。横断比較は [[LLM-Wiki-ingest-skillのパターン]] 参照。
+skill 群を調べて得た知見の要点。横断比較は [[LLM-Wiki-ingest-skillのパターン]] 参照。
 
 ### 5 skill 共通の 4 ブロック構造
 

@@ -308,7 +308,7 @@ v0.2.7 以降 Cursor（`additional_context`）と GitHub Copilot CLI / SDK（`ad
 
 ## ingest skill 設計の深掘り
 
-`10_raw/20260515_karpathy-wiki_skill群調査.md`（ワークスペース側）で得た知見の要点。横断比較は [[LLM-Wiki-ingest-skillのパターン]] 参照。
+skill 群を調べて得た知見の要点。横断比較は [[LLM-Wiki-ingest-skillのパターン]] 参照。
 
 ### 12 step ingester の step 4 が異常に長い（行数で重み付け）
 

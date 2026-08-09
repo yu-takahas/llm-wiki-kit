@@ -62,4 +62,4 @@ issue という概念そのものを説明する page への wiki link は OK（
 Edit が `String to replace not found` で失敗したら、同型の `old_string` でリトライせず、まず Read で実物を再取得して typo を特定する。
 `old_string` は unique が確保できる最小範囲だけ切る（長くすると typo 余地が増える）。
 
-根拠は `$KIT/docs/knowledge/プロンプト設計原則.md`「Edit の差分ミスマッチ対策」セクション。
+根拠は `$KIT/docs/knowledge/プロンプト設計原則.md`「実物を開いてから書く」セクション。

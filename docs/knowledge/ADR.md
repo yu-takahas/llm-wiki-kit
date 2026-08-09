@@ -2,7 +2,7 @@
 type: entity
 tags: [設計, ドキュメント, architecture-decision-record]
 sources:
-  - 10_raw/20260723_ソフトウェア設計ドキュメント体系調査.md
+  - web 調査
 created: 2026-07-23
 updated: 2026-07-23
 ---

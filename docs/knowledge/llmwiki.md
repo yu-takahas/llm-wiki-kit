@@ -291,7 +291,7 @@ CREATE VIRTUAL TABLE IF NOT EXISTS chunks_fts USING fts5(
 
 ## ingest skill 設計の深掘り
 
-`10_raw/20260515_llmwiki_skill群調査.md`（ワークスペース側）で得た知見の要点。横断比較は [[LLM-Wiki-ingest-skillのパターン]] 参照。
+skill 群を調べて得た知見の要点。横断比較は [[LLM-Wiki-ingest-skillのパターン]] 参照。
 
 ### ingest 専用 tool は存在せず、guide tool が prompt で workflow を教える
 

@@ -5,8 +5,10 @@ sources:
   - https://code.claude.com/docs/en/skills
   - https://platform.claude.com/docs/en/agents-and-tools/agent-skills/best-practices
   - "[[探索・活用ジレンマ]]"
+  - https://platform.claude.com/docs/ja/build-with-claude/prompt-engineering/prompting-claude-opus-5
+  - https://platform.claude.com/docs/ja/build-with-claude/prompt-engineering/claude-prompting-best-practices
 created: 2026-02-11
-updated: 2026-07-20
+updated: 2026-08-10
 ---
 
 # Claude Code Skill の書き方
@@ -28,6 +30,24 @@ LLM はデフォルトで greedy（活用）に倒れる非対称性が、skill 
 - 事例: `/lw-commit`（活用）に「ちゃんと反映やりきったか」「リファクタ要否」（探索）を同居させ「該当なし」空振り → `/lw-retro` を別 skill に剥がして解消
 - 例外: 探索 → 活用が必ず連続発火し結果を直接消費するケース（review → fix の [[Self-Refine]] 型）は、1 skill 内で見出し分離（`## 探索` / `## 活用`）+ 引数 flag による mode 切替（`--fix` 等）で代替可
 
+## 自由度を task に合わせる
+
+指示の具体度は、対象の壊れやすさとばらつきで決める。
+
+| 自由度 | 書き方                               | 使う場面                                            |
+| ------ | ------------------------------------ | --------------------------------------------------- |
+| 高     | 文章での指示                         | 複数のやり方が成立する / 判断が文脈に依存する       |
+| 中     | 疑似コードやパラメータ付きスクリプト | 推奨パターンがある / ある程度のばらつきは許容できる |
+| 低     | 具体的なスクリプト、パラメータは最小 | 操作が壊れやすい / 一貫性が要る / 手順が固定        |
+
+公式の比喩は「崖に挟まれた細い橋」と「障害物のない野原」。
+橋なら安全な道は 1 つしかないので、具体的なガードレールと正確な手順を与える（順序が決まっている DB マイグレーションのようなもの）。
+野原なら多くの道が成功に通じるので、方向だけ示してモデルに任せる（文脈が最適解を決めるコードレビューのようなもの）。
+
+kit の skill もこの軸で分かれる。
+`lw-commit` の Process は低自由度（実行するコマンドをリテラルで書く）、`lw-doc-review` の観点は高自由度（何を見るかだけ示す）。
+新しい skill を設計する時に、どちらへ寄せるかを先に決める。
+
 ## 基本構造
 
 skill 名はディレクトリ名で決まる。
@@ -44,8 +64,22 @@ my-skill/
 ```
 
 参照は 1 段階まで（SKILL.md → reference.md）。
-ネストすると Claude が途中で止まる可能性。
+ネストすると、Claude が `head -100` のようなコマンドで部分的にプレビューして全文を読まないことがあり、情報が欠ける。
 この設計原則の詳細は [[Progressive-Disclosure]]。
+
+100 行を超える reference ファイルには冒頭に目次を置く。
+部分読みされた場合でも、何が書いてあるかの全体像は見える。
+
+## 命名
+
+`name` の制約は 64 文字以内、小文字英数とハイフンのみ、XML タグ不可、予約語（`anthropic` / `claude`）不可。
+
+公式が勧めるのは動名詞形（`processing-pdfs` / `analyzing-spreadsheets`）で、その skill が何をする活動なのかが名前で分かる。
+名詞句（`pdf-processing`）や動詞形（`process-pdfs`）も許容される。
+避けるのは曖昧な名前（`helper` / `utils` / `tools`）と広すぎる名前（`documents` / `data` / `files`）。
+
+kit は `lw-` prefix + 動詞形（`lw-render` / `lw-commit`）で統一している。
+prefix は bundled skill との衝突回避も兼ねる（「配置場所」セクション参照）。
 
 ## frontmatter
 
@@ -80,7 +114,8 @@ hooks: ...                     # skill 固有 hook
 - **third person で書く**（公式用語、`I can help...` / `You can use...` は NG）
   - action-oriented 三単現動詞で始める：`Explains` / `Renders` / `Validates`
   - `Use when ...` 単体は命令形で third person 視点を満たさないため、action description と組み合わせる
-- `description` + `when_to_use` 合算で 1,536 char 以内（超過は切り詰め、`skillListingMaxDescChars` で変更可）
+- `description` 単体は 1,024 char 以内。frontmatter のバリデーション上限で、超えると通らない
+- `description` + `when_to_use` の合算は skill listing で 1,536 char に切り詰められる（`skillListingMaxDescChars` で変更可）。上限が 2 種類あるので混同しない
 - 英語で書く（context 効率）
 - ユーザーが言いそうなフレーズを含める
 
@@ -114,7 +149,7 @@ description は毎回 system prompt に積まれる。
 ```text
 全 skill 合計の予算 = context window × 4 char/token × 1%
                      （200k token なら ~8,000 char）
-1 skill 上限       = 1,536 char（description + when_to_use 合算、skillListingMaxDescChars で変更可）
+1 skill の表示上限 = 1,536 char（description + when_to_use 合算、skillListingMaxDescChars で変更可）
 最小表示長         = 20 char
 ```
 
@@ -142,6 +177,24 @@ with pdfplumber.open("file.pdf") as pdf:
 
 悪い例（~150 token）: 「PDF とは Portable Document Format の略で...」← Claude は知っている。
 
+### 時間依存の情報を書かない
+
+「2025 年 8 月より前なら旧 API を使う」のような書き方をしない。
+時間が経つと誤りになり、しかも誤りだと気づかれにくい。
+
+現行の手順だけを本文に書き、過去の方式が要るなら「旧方式」の節に隔離する。
+折りたたみ（`<details>`）に入れれば、履歴を残しつつ本文は現行だけになる。
+
+### 選択肢を並べすぎない
+
+複数のやり方を並べるとモデルが迷う。
+既定を 1 つ示し、必要なら例外だけ添える。
+
+```text
+NG: pypdf でも pdfplumber でも PyMuPDF でも pdf2image でもよい
+OK: テキスト抽出には pdfplumber を使う。スキャン PDF で OCR が要る場合だけ pdf2image + pytesseract に切り替える
+```
+
 ### 言語選択
 
 | 部分        | 推奨言語  | 理由                                      |
@@ -156,27 +209,53 @@ NG: You might want to consider using the Read tool...
 OK: Use the Read tool to read files. Do NOT use cat or head.
 ```
 
-### やらないことを明示
+### 肯定形を既定にする
 
-モデルは「すべきこと」は推論できるが「すべきでないこと」は自発判定しにくい。
+スタイルや挙動の誘導は肯定形で書く。
+資料は「してはいけないことではなく、すべきことを伝える」「望むスタイルの肯定的な例は、何をしないかについての指示より効果的」としている。
+
+否定形を使うのは、例外なしの禁止事項（破壊的操作・安全にかかわるもの）に限る。
+その場合も理由を添えると効く。
 
 ```text
 NEVER skip hooks (--no-verify) unless the user explicitly requests it.
-Do NOT create documentation files unless explicitly requested.
+Do not create documentation files unless explicitly requested.
 ```
+
+資料の対比例は「省略記号を使うな」より「読み上げエンジンが発音できないので使わない」の方が効く、という形。
+禁止の字面だけ書くより、なぜそうしてほしいかを添える方が他の場面にも一般化する。
 
 ### 制約は具体的な操作を列挙
 
 抽象的な「変更しないで」より具体的な操作を並べる:
 
 ```text
-=== CRITICAL: READ-ONLY MODE - NO FILE MODIFICATIONS ===
-You are STRICTLY PROHIBITED from:
-- Creating new files
-- Modifying existing files
-- Deleting files
-- Using redirect operators (>, >>, |)
+IMPORTANT: This skill is read-only. Do not:
+- Create new files
+- Modify existing files
+- Delete files
+- Use redirect operators (>, >>, |)
 ```
+
+列挙する形はそのままでよい。
+装飾バナー（`=== CRITICAL: ===`）と `STRICTLY PROHIBITED` のような強語調は落とす。
+
+### 出力量を制御する
+
+SKILL.md は下限側（省略させない）の指示に偏りやすく、上限側の規定を置き忘れる。
+Opus 5 は既定の応答が以前のモデルより長く、作業中のナレーションも増える。
+effort を下げても目に見える応答は確実には短くならないので、量はプロンプトで明示的に指示する。
+
+書く対象は 3 種類。
+
+- 応答の簡潔さ — 主要な回答に分量を割き、前置きと留保を短くする
+- 作業中のナレーション — 重要な発見と方向転換のときだけ更新する
+- 成果物ドキュメントの長さ — 実質に見合う分量にし、詰め物をしない
+
+長い指示文では、末尾近くに短いリマインダーを置いて本文の指示と対にする。
+
+出力を減らすことと、探索や走査を省略させないことは別の軸で扱う。
+「該当なしでも報告する」のような報告義務は走査を駆動する装置なので、量を減らすときは報告そのものを消さず、個別報告を集約報告に畳む。
 
 ### 完了時の出力形式を指定する
 
@@ -192,7 +271,7 @@ Plan Agent の例では末尾に必ず `### Critical Files for Implementation` +
 
 ### ツールの使い分けを明示する
 
-「何を使え」+「何を使うな」のペアで書く:
+使うツールを先に書き、置き換え対象を `instead of` で添える:
 
 ```text
 - To read files use Read instead of cat, head, tail, or sed
@@ -203,20 +282,31 @@ Plan Agent の例では末尾に必ず `### Critical Files for Implementation` +
 ### 例外条件を `unless` で
 
 禁止ルールだけだとモデルが過度に保守的になる。
+指示に文字通り従うので、逃げ道を書いておかないと必要な場面でも実行しない。
 
 ```text
-NEVER skip hooks unless the user explicitly requests it.
+Do not skip hooks unless the user explicitly requests it.
 ```
 
 ### 強調マーカー
 
-| マーカー            | 用途             |
-| ------------------- | ---------------- |
-| `IMPORTANT:`        | 重要な指示       |
-| `=== CRITICAL: ===` | 絶対に守る制約   |
-| `NEVER` / `ALWAYS`  | 例外なしのルール |
-| `Do NOT` / `MUST`   | 強い禁止・義務   |
-| `<example>`         | few-shot 例      |
+既定は普通の書き方にする。
+`CRITICAL: You MUST use this tool when...` のような強い語調はツールや skill の過剰トリガーを引き起こすので、`Use this tool when...` に落とす（この指摘の出典は主語が Opus 4.5 / 4.6）。
+
+強マーカーを使うのは例外なしの制約に限る。
+公式のサンプルプロンプトも `NEVER output a series of overly short bullet points` のように使い続けているので、禁止されているわけではない。
+効き目の源泉は稀少性で、全部を `CRITICAL` にすると何も `CRITICAL` でなくなる。1 ファイルに数箇所まで。
+
+| マーカー           | 使う場面                                           |
+| ------------------ | -------------------------------------------------- |
+| `IMPORTANT:`       | 読み飛ばされると困る指示                           |
+| `NEVER` / `ALWAYS` | 例外なしのルール（破壊的操作・安全にかかわるもの） |
+| `Do NOT` / `MUST`  | 強い禁止・義務                                     |
+| `<example>`        | few-shot 例（強調ではなく構造化）                  |
+
+トリガー条件と頻度指示には使わない。
+「迷ったら使う」「デフォルトで使う」の型は過剰トリガーを招くと資料が名指ししている。
+装飾バナー（`=== CRITICAL: ===`）も使わない。
 
 ## 手順省略を仕組みで防ぐ
 
@@ -226,6 +316,16 @@ LLM は「この状況なら不要」と推論してステップを省く。禁�
 - resist-table（言い訳対戦表）で省略の推論を先回りする。「〜だから省略してよい」という浮かびがちな言い訳と、それへの現実を表で対置する。省略が起きやすいのはモード分岐（quick 等）で「このモードなら不要」と推論する地点
 - 省略されて困る動作は 1 箇所でなく複数箇所（全体像 / 言い訳対戦表 / 必須動作）に置く。1 箇所の指示は文脈次第で読み飛ばされる
 - 層を分ける。SKILL.md のチェックリストは advisory（順番を忘れないための指針）。誠実性の担保が必要な制約は deterministic 層（hooks / settings / allowed-tools）で締める
+
+## 評価を先に作る
+
+公式の推奨は、詳しい手順を書く前に評価を作ること。
+順序は「skill 無しで代表タスクを実行して失敗を記録する → その失敗を突く評価を 3 つ作る → 基準値を測る → 評価を通る最小限の指示を書く → 反復する」。
+
+想像した要件ではなく実際に起きた失敗から書き始めるので、使われない記述が減る。
+
+kit のミスドリブン更新（試運転で見つかった失敗を言い訳対戦表に追記する）は近い役割を持つが、こちらは skill を書いた後の改善サイクル。
+書く前の段階に評価を置くと、最初から短く書ける。
 
 ## リンクを腐らせない
 
@@ -308,15 +408,18 @@ fork は ToolUse 扱いで [[ReAct]] ループが 1 回余計に回る。
 | Project    | `.claude/skills/<name>/SKILL.md`   | そのプロジェクト |
 | Plugin     | `<plugin>/skills/<name>/SKILL.md`  | プラグイン有効時 |
 
-同名は後勝ち: `built-in → plugin → userSettings → projectSettings → flagSettings → policySettings`。
+同名衝突の解決順は enterprise > personal > project。
+どのレベルに置いた skill も、同名の bundled skill を上書きする（project の `.claude/skills/code-review/` は bundled の `/code-review` を置き換える）。
+plugin skill は `plugin-name:skill-name` の名前空間を持つので他のレベルとは衝突しない。
+`.claude/commands/` のファイルも同じ扱いで、skill と command が同名なら skill が優先される。
 
-built-in には自作 skill と同名のものが同梱されることがある。
-Claude Code は `code-review` / `simplify` / `review` / `security-review` 等を built-in skill として配布しており、Personal / Project に同名 skill を置くと上記 precedence の解決対象になる。
-実測では built-in が勝つ（2026-06-25 検証）。
-`~/.claude/skills/code-review/` に自作 skill を置いた状態で `/code-review low` を実起動したところ、built-in のフロー（diff 読み → バグ探し）が走り、自作版（codex/gemini 委譲）は起動しなかった。
-session の skill 一覧にも built-in 版の description が表示される。
-上の「userSettings が built-in を後勝ち」という precedence 順序とは食い違っており、同名衝突時は built-in が優先される実態がある。
-対策として自作 skill には prefix を付けて衝突を回避するのが安全（llm-wiki では `lw-` prefix を採用）。
+Claude Code は `/doctor` / `/code-review` / `/debug` / `/loop` / `/batch` 等を bundled skill として配布している。
+`disableBundledSkills` で一括無効にできる（`/doctor` だけは残る）。
+
+2026-06-25 の実測では逆の結果が出ていた（`~/.claude/skills/code-review/` に自作版を置いても built-in のフローが走り、skill 一覧にも built-in の description が出た）。
+現行仕様では自作側が勝つ。
+
+どちらにせよ prefix を付けておけば衝突自体が起きない（llm-wiki では `lw-` prefix を採用）。
 
 ## Permissions
 

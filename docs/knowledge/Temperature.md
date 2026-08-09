@@ -2,9 +2,9 @@
 type: concept
 tags: [Temperature, decoding, サンプリング, LLM, exploration-exploitation]
 sources:
-  - 10_raw/20260526_探索活用ジレンマとLLMの決定.md
+  - https://platform.claude.com/docs/ja/build-with-claude/prompt-engineering/claude-prompting-best-practices
 created: 2026-05-26
-updated: 2026-07-07
+updated: 2026-08-09
 ---
 
 # Temperature
@@ -23,7 +23,22 @@ softmax のロジットを温度 T で割ってから確率に変換するため
 Temperature は decoding における [[探索・活用ジレンマ]] の制御つまみそのもの。
 高温は探索（多様な候補を試す）、低温は活用（既知の最善を取る）に対応する。
 固定値で扱うのが従来だが、近年は生成中に隠れ状態から温度を適応選択する手法や、RLHF 等の RL ポストトレーニングで生じる探索の崩壊に対し温度をメタポリシーとして制御する研究が進んでいる。
+
+## Claude API での扱い
+
 Anthropic は [[Claude]] Opus 4.7 以降で API パラメータとしての Temperature を廃止し、出力調整をプロンプトに委ねる方式に移行した。
+同じ時期に思考の制御方法も入れ替わっている。
+
+- `temperature` — Opus 4.7 以降で廃止
+- `budget_tokens`（拡張思考の手動バジェット）— Opus 4.6 / Sonnet 4.6 では動くが非推奨、4.7 以降のモデルでは 400 エラーになる
+- `thinking: {type: "adaptive"}`（適応的思考）— モデルがいつどれだけ思考するかを動的に決める方式。4.6 以降はこちらが主
+
+思考の深さは effort（`low` / `medium` / `high` / `xhigh` / `max`）で制御する。
+Opus 5 と Sonnet 5 は Claude API と Claude Code で既定が `high`。
+トークンの厳格な上限が要る場合は `max_tokens` を使う。
+
+サンプリングの温度そのものが無くなったわけではなく、呼び出し側から触れる面が閉じた。
+出力の多様性を動かしたいなら、プロンプトで指示するか effort を変える。
 
 ## リスト生成のパラドックス
 

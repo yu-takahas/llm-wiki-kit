@@ -358,7 +358,7 @@ lint 実行時に文体規約違反も flag:
 
 ## ingest skill 設計の深掘り
 
-`10_raw/20260515_claude-obsidian_skill群調査.md`（ワークスペース側）で得た知見の要点。横断比較は [[LLM-Wiki-ingest-skillのパターン]] 参照。
+skill 群を調べて得た知見の要点。横断比較は [[LLM-Wiki-ingest-skillのパターン]] 参照。
 
 ### ingest の二重実装（skill と agent の関係）
 

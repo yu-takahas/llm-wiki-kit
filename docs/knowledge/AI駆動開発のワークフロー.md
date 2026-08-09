@@ -2,7 +2,7 @@
 type: source
 tags: [AI, 開発手法, TDD, spec-driven, context-engineering]
 sources:
-  - 10_raw/dev-methodology/20260713_AI駆動開発ワークフロー調査.md
+  - web 調査
 created: 2026-07-13
 updated: 2026-07-13
 ---

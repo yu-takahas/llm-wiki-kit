@@ -3,8 +3,9 @@ type: entity
 tags: [prompt-engineering, reasoning, CoT, technique]
 sources:
   - Wei et al., 2022. Chain-of-Thought Prompting Elicits Reasoning in Large Language Models
+  - https://platform.claude.com/docs/ja/build-with-claude/prompt-engineering/claude-prompting-best-practices
 created: 2026-05-17
-updated: 2026-05-17
+updated: 2026-08-09
 ---
 
 # Chain of Thought
@@ -16,14 +17,26 @@ CoT。LLM に推論を段階的に説明させて複雑タスクの精度を上�
 
 Wei et al., 2022. Chain-of-Thought Prompting Elicits Reasoning in Large Language Models.
 
-## モデル種別と使い分け
+## 思考が既定のモデルでの扱い
 
-| モデル                                        | 推奨                                  |
-| --------------------------------------------- | ------------------------------------- |
-| 通常モデル（GPT-4o / Claude Sonnet 等）       | 明示的に CoT 指示 + Few-shot 例を併用 |
-| 推論モデル（GPT-5 / Claude Opus 4.7 / o1 系） | 暗黙に CoT 有効化、zero-shot 優位     |
+CoT を明示指示するかは、モデルの思考が既定で有効かどうかで決まる。
+現行の Claude では設定がモデルごとに違う。
 
-推論モデルに対して過剰な Few-shot を入れると逆効果（[[赤ずきんの原則]] 違反、訓練データの zero-shot 路線から逸れる）。
+| モデル                     | 思考の既定                       |
+| -------------------------- | -------------------------------- |
+| Fable 5 / Mythos 5         | 常にオン、設定で切れない         |
+| Opus 5 / Sonnet 5          | `thinking` を省略するとオン      |
+| Opus 4.6〜4.8 / Sonnet 4.6 | `thinking` を省略するとオフ      |
+| Haiku 4.5                  | 拡張思考のみ、適応的思考は非対応 |
+
+思考が有効なら CoT は暗黙に働くので、「段階的に説明して」の明示指示は要らない。
+Opus 5 では思考の無効化が effort `high` 以下に限られ、`xhigh` / `max` で無効化すると 400 エラーになる。
+
+手動の CoT プロンプティングはフォールバックの位置づけで、思考をオフにして動かす統合でだけ使う。
+その場合は `<thinking>` / `<answer>` のような構造化タグで推論と最終出力を分離する。
+ただし Opus 5 で思考を無効にすると内部 XML タグが可視の応答に漏れることがあるため、低い effort で思考を有効にしたままにする方が推奨される。
+
+過剰な Few-shot が逆効果になる点は変わらない（[[赤ずきんの原則]] 違反、訓練データの zero-shot 路線から逸れる）。
 
 ## 関連手法
 

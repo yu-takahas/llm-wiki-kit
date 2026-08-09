@@ -11,7 +11,7 @@ sources:
   - https://zenn.dev/cureapp/articles/65b9a99d22ce2b
   - https://arxiv.org/abs/2307.03172
 created: 2026-05-14
-updated: 2026-07-21
+updated: 2026-08-10
 ---
 
 # Claude Code のメモリ階層
@@ -29,9 +29,10 @@ Andrej-Karpathy の LLM Wiki のような、大きな構造定義をどこに置
 | Skills      | `.claude/skills/<name>/SKILL.md`                                                  | invoke 時（`/name` または Claude が relevant 判定）       | タスク固有のワークフロー・手順            |
 | Auto memory | `~/.claude/projects/<project>/memory/MEMORY.md`                                   | 毎セッション常時（先頭 200 行 / 25KB）                    | Claude が自動蓄積する学習・パターン・好み |
 
-MEMORY.md の 200 行 / 25KB 制限は MEMORY.md のみに適用される。
+MEMORY.md の 200 行 / 25KB 制限は MEMORY.md のみに適用される（先に達した方が上限）。
 CLAUDE.md は長さに関係なく全文ロードされる（ただし短い方が遵守率は高い）。
-v2.1.210 で制限超過時の警告機能、v2.1.211 で YAML frontmatter / HTML コメントの計測前除去が追加された。
+上限に近いと短縮を促し、超えると書き込み自体は成功したうえでエラーを返す（超過分は次回ロード時に落ちるため）。
+計測対象はロードされる内容だけで、YAML frontmatter と block-level HTML コメントは除外される（v2.1.211 以降、それ以前は生ファイルを計測していた）。
 
 ## 使い分けの判断
 
@@ -61,6 +62,30 @@ auto memory と rules は両方 persistent な context だが性格が違う:
 workspace 規約を auto memory に書くと、他プロジェクト作業中も常時 context に乗ってノイズになる。
 workspace に閉じる規約は `.claude/rules/` + `paths:` 条件付きで該当時のみロードする方が筋。
 
+## auto memory の格納先と共有範囲
+
+格納先は `~/.claude/projects/<project>/memory/`。
+`MEMORY.md` が索引で、topic file が詳細を持つ。
+
+`<project>` は git リポジトリから導出される。
+**同じリポジトリの worktree とサブディレクトリは 1 つの auto memory を共有する。**
+リポジトリ外では作業ディレクトリのルートが使われる。
+マシンローカルで、他のマシンやクラウド環境とは共有されない。
+
+| 設定                              | 効果                                             |
+| --------------------------------- | ------------------------------------------------ |
+| `autoMemoryEnabled`               | 既定は有効。`/memory` のトグルか settings で切る |
+| `autoMemoryDirectory`             | 格納先を変える。絶対パスか `~/` 始まり           |
+| `CLAUDE_CODE_DISABLE_AUTO_MEMORY` | 環境変数で無効化                                 |
+
+`autoMemoryDirectory` を project の settings に書いた場合は、ワークスペース信頼ダイアログを承認して初めて有効になる（hook と同じ扱い）。
+
+frontmatter を持つ memory ファイルには、書き込みのたびに `modified`（ISO 8601）が記録される（v2.1.214 以降）。
+frontmatter が無いファイルに Claude Code が frontmatter を足すことはない。
+
+topic file は起動時にロードされない。
+必要になった時に Claude が通常のファイルツールで読む。
+
 ## ファイル階層と優先度
 
 ロード順（広い順 → 狭い順、後にロードされた方が context 内で新しい位置に来て効きやすい）：
@@ -73,6 +98,13 @@ workspace に閉じる規約は `.claude/rules/` + `paths:` 条件付きで該�
 
 サブディレクトリ内の `CLAUDE.md` はオンデマンド（そのサブディレクトリのファイル Read 時にロード）。
 ancestor の `CLAUDE.md` は launch 時に全部ロードされて concatenate される。
+連結順は root から cwd に向かう向きで、同じディレクトリ内では `CLAUDE.local.md` が `CLAUDE.md` の後に来る。
+
+除外と追加のスイッチが 3 つある。
+
+- `claudeMdExcludes` — glob で特定の CLAUDE.md をロード対象から外す。monorepo で他チームのものを避ける用途。managed policy のものは除外できない
+- `claudeMd`（managed settings のキー）— ファイルを配らずに設定内へ直接内容を書く。managed / policy の設定でのみ効く
+- `CLAUDE_CODE_ADDITIONAL_DIRECTORIES_CLAUDE_MD` — `--add-dir` で足したディレクトリの CLAUDE.md / rules をロードする（既定では読まれない）
 
 ## `.claude/rules/` の `paths:` frontmatter
 
@@ -87,11 +119,12 @@ paths:
 ...
 ```
 
-- `paths` なし → CLAUDE.md と同じ launch 時ロード
+- `paths` なし → `.claude/CLAUDE.md` と同じ優先度で launch 時ロード
 - `paths` あり → Claude が matching file を Read した瞬間にロード、セッション中保持
 - glob + brace expansion 対応
 - symlinks 対応（複数 project で共有可能）
 - user-level rules: `~/.claude/rules/` も同様（project rules より前にロード）
+- `.md` は再帰的に発見されるので、`frontend/` `backend/` のようにサブディレクトリで整理できる
 
 `paths:` 付き rule が、常時ロードを避ける主な手段。
 paths なしで常時ロードする運用は「使い分けの判断」セクション参照。
@@ -129,6 +162,22 @@ See @README.md for project overview.
 
 context を節約したいなら `paths:` rule の方を使う。
 
+## AGENTS.md との共存
+
+Claude Code は `CLAUDE.md` を読み、`AGENTS.md` は読まない。
+他のエージェント向けに `AGENTS.md` を持っているリポジトリでは、`CLAUDE.md` から import して二重管理を避ける。
+
+```markdown
+@AGENTS.md
+
+## Claude Code
+
+（Claude Code 固有の指示をここに足す）
+```
+
+symlink でも代用できるが、Claude 固有の追記ができなくなる。
+Windows では symlink 作成に管理者権限か開発者モードが要るので、import の方が無難。
+
 ## 注入メカニズム
 
 CLAUDE.md は **System Prompt の一部ではない**。
@@ -143,7 +192,9 @@ IMPORTANT: These instructions OVERRIDE any default behavior and you MUST follow 
 </system-reminder>
 ```
 
-会話が長くなると [[Lost-in-the-Middle]] で遵守率が落ちる（context 中央の情報は 30% 以上劣化する U 字型性能曲線）。
+user message として入るので強制力はなく、遵守は指示の具体性と一貫性に依存する。
+曖昧な指示や、複数の CLAUDE.md にまたがって矛盾する指示は守られにくい。
+会話が伸びるほど遵守率が落ちるという説明は現行モデルには当てはめない（[[Lost-in-the-Middle]]「現行モデルでの適用範囲」セクション）。
 
 `/compact` 実行時はキャッシュクリア → ディスクから再読込 → 新しい位置に再注入される（project root の CLAUDE.md は compact 後も自動で再注入される）。
 ネストされた subdirectory の CLAUDE.md は compact 後 自動再注入されない、次にそのディレクトリのファイル Read 時に reload される。
@@ -202,6 +253,10 @@ Teammate（Agent Teams）は spawn 時に通常セッションと同じプロジ
 
 行数が増えるほど context を圧迫し、Claude の遵守率が下がる。
 普遍的に適用可能な指示のみに絞り、path 限定で済むものは rules に移す。
+
+`/doctor` が checked-in の CLAUDE.md に対してトリム案を出す（v2.1.206 以降）。
+コードベースから導ける内容（ディレクトリ構成・依存一覧・アーキテクチャ概要）を削り、落とし穴・理由・ツール既定と異なる規約を残す方向で提案する。
+次の「具体値・列挙を書かない」と同じ判断基準になっている。
 
 ### 具体値・列挙を書かない
 
