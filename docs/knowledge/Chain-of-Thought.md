@@ -2,17 +2,16 @@
 type: entity
 tags: [prompt-engineering, reasoning, CoT, technique]
 sources:
-  - Wei et al., 2022. Chain-of-Thought Prompting Elicits Reasoning in Large Language Models
   - https://platform.claude.com/docs/ja/build-with-claude/prompt-engineering/claude-prompting-best-practices
 created: 2026-05-17
-updated: 2026-08-10
+updated: 2026-08-11
 ---
 
 # Chain of Thought
 
 CoT。LLM に推論を段階的に説明させて複雑タスクの精度を上げる手法。
 Wei et al. (2022) が示したのは、思考が既定で有効でないモデルに「Let's think step by step.」のような指示を足すと、複雑な推論タスクの精度が大きく向上するという効果。
-思考が既定で有効なモデルでは事情が変わる（後述）。
+思考が既定で有効なモデルでは事情が変わる（「思考が既定のモデルでの扱い」セクション）。
 
 ## 提唱
 
@@ -21,7 +20,7 @@ Wei et al., 2022. Chain-of-Thought Prompting Elicits Reasoning in Large Language
 ## 思考が既定のモデルでの扱い
 
 CoT を明示指示するかは、モデルの思考が既定で有効かどうかで決まる。
-現行の Claude では設定がモデルごとに違う。
+2026 年 8 月時点の Claude では、設定がモデルごとに違う。
 
 | モデル                     | 思考の既定                       |
 | -------------------------- | -------------------------------- |
@@ -36,7 +35,7 @@ Opus 5 では思考の無効化が effort `high` 以下に限られ、`xhigh` / 
 手動の CoT プロンプティングはフォールバックの位置づけになる。
 第一選択は低い effort で思考を有効に保つことで、思考をオフに固定した統合でだけ `<thinking>` / `<answer>` のような構造化タグで推論と最終出力を分離する。
 
-Opus 5 で思考を無効にすると 2 つのアーティファクトが出る。
+Opus 5 で思考を無効にすると、2 つのアーティファクトが時折現れる。
 内部 XML タグが可視の応答に漏れること、ツール呼び出しが構造化ブロックでなくテキストとして出力されて実行されないこと。
 後者はエラーが出ないまま呼び出しが失われ、その文字列が会話履歴に残って後続のターンに影響するので、ツールを多用するワークロードで問題になりやすい。
 
@@ -51,5 +50,6 @@ Opus 5 で思考を無効にすると 2 つのアーティファクトが出る�
 
 ## 関連
 
+- [[Claude-effort]] — 思考の深さとトークン消費を制御するパラメータ
 - [[効果的なプロンプト設計の方法論]] — 3 層整理の層 3
 - [[プロンプト設計原則]] — skill の Process 設計（タスクをステップに分解する設計手法）の根拠

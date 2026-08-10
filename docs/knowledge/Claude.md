@@ -5,7 +5,7 @@ sources:
   - https://platform.claude.com/docs/ja/about-claude/models/overview
   - https://platform.claude.com/docs/ja/about-claude/models/whats-new-opus-5
 created: 2026-07-07
-updated: 2026-08-10
+updated: 2026-08-11
 ---
 
 # Claude
@@ -23,14 +23,16 @@ AI の安全性研究と能力開発を両立する設計思想のもと、[[Con
 - Claude 4.x（2025 年 5 月〜）: 1M トークンコンテキスト（ベータ）、effort パラメータによる速度・能力のトレードオフ
 - Claude 4.6 世代: 適応的思考を導入し、拡張思考の手動バジェット（`budget_tokens`）を非推奨化
 - Claude Opus 4.7: 新しいトークナイザを導入（同じテキストで従来より約 30% 多いトークンになる）。API パラメータの Temperature と `budget_tokens` を廃止
-- Claude Fable 5 / Mythos 5（2026 年 6 月 9 日）: Opus の上位に位置する Mythos クラス。Mythos 5 は Project Glasswing の招待制で一般提供されない
-- Claude Opus 5 / Sonnet 5: 思考が既定で有効。Opus 5 は 1M コンテキストが既定かつ最大で、より小さいバリアントを持たない
+- Claude Fable 5 / Mythos 5（2026 年 6 月 9 日）: Opus の上位に立つ最上位ティア。Fable 5 が一般提供、Mythos 5 は Project Glasswing 限定
+- Claude Opus 5 / Sonnet 5: 思考が既定で有効。Opus 5 は 1M コンテキストが既定かつ最大で、200k 版のような短いコンテキストの派生を持たない
 
 ## 現行ラインナップ
 
 2026 年 8 月時点。
-主力は Fable 5 / Opus 5 / Sonnet 5 / Haiku 4.5 で、Opus 4.8 / 4.7 / 4.6 と Sonnet 4.6 も現行として提供が続く。
-公式がレガシーに分類しているのは Opus 4.5 / Opus 4.1 / Sonnet 4.5。
+各ティアの最新モデルは Fable 5 / Opus 5 / Sonnet 5 / Haiku 4.5 で、Opus 4.8 / 4.7 / 4.6 と Sonnet 4.6 も現行として提供が続く。
+公式がレガシーに分類しているのは Opus 4.5 / Sonnet 4.5。
+
+次の表は各ティアの最新モデルを扱う。
 
 | モデル    | コンテキスト | 最大出力 | 思考                   |
 | --------- | ------------ | -------- | ---------------------- |
@@ -39,7 +41,7 @@ AI の安全性研究と能力開発を両立する設計思想のもと、[[Con
 | Sonnet 5  | 1M           | 128k     | 適応的思考、既定でオン |
 | Haiku 4.5 | 200k         | 64k      | 拡張思考のみ           |
 
-Mythos 5 は Fable 5 と同等の能力・価格・API 仕様を持つが、Project Glasswing の参加者しか使えないため一般提供のラインナップには含めない。
+Mythos 5 は Fable 5 と同等の能力・価格・API 仕様を持つが、参加者しか使えないため一般提供のラインナップには含めない。
 
 ## 主な特徴
 
@@ -58,6 +60,7 @@ Mythos 5 は Fable 5 と同等の能力・価格・API 仕様を持つが、Proj
 ## 関連
 
 - Anthropic — 開発元
+- [[Claude-effort]] — 応答全体のトークン消費を制御するパラメータ、水準の選び方と思考との関係
 - [[Constitutional-AI]] — 訓練手法
 - Amanda-Askell — 性格・価値観設計の主導者
 - RLHF — Constitutional AI の比較対象

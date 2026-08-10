@@ -8,7 +8,7 @@ sources:
   - https://platform.claude.com/docs/ja/build-with-claude/prompt-engineering/prompting-claude-opus-5
   - https://platform.claude.com/docs/ja/build-with-claude/prompt-engineering/claude-prompting-best-practices
 created: 2026-02-11
-updated: 2026-08-10
+updated: 2026-08-11
 ---
 
 # Claude Code Skill の書き方
@@ -18,9 +18,8 @@ skill のロードタイミングや CLAUDE.md / rules との使い分けは [[C
 
 ## 責務分割は探索 vs 活用で判定する
 
-[[探索・活用ジレンマ]]:
-
-LLM はデフォルトで greedy（活用）に倒れる非対称性が、skill の責務設計の判定基準として効く。
+[[探索・活用ジレンマ]] が示すとおり、LLM はデフォルトで greedy（活用）に倒れる。
+この非対称性が、skill の責務設計の判定基準として効く。
 1 skill に探索の所作（棚卸し / 候補列挙 / 既存一巡走査 / リファクタ要否判断）と活用の所作（決め打ちで畳む / 実行）を同居させると、活用側の慣性で探索が空振りする（exploration collapse と同型）。
 
 判定: 1 skill の責務に探索と活用が両方入っていたら分割する。
@@ -55,7 +54,7 @@ kit の skill もこの軸で分かれる。
 
 想像した要件ではなく実際に起きた失敗から書き始めるので、使われない記述が減る。
 
-kit のミスドリブン更新（試運転で見つかった失敗を言い訳対戦表に追記する）は近い役割を持つが、こちらは skill を書いた後の改善サイクル。
+kit のミスドリブン更新（試運転で見つかった失敗を resist-table（言い訳対戦表）に追記する）は近い役割を持つが、こちらは skill を書いた後の改善サイクル。
 書く前の段階に評価を置くと、最初から短く書ける。
 
 ## 基本構造
@@ -196,15 +195,15 @@ SKILL.md にハードなサイズ制限はないが、起動時に全文が cont
 
 良い例（~50 token）:
 
-```markdown
+````markdown
 ## PDF テキスト抽出
 pdfplumber を使用:
-\`\`\`python
+```python
 import pdfplumber
 with pdfplumber.open("file.pdf") as pdf:
     text = pdf.pages[0].extract_text()
-\`\`\`
 ```
+````
 
 悪い例（~150 token）: 「PDF とは Portable Document Format の略で...」← Claude は知っている。
 
@@ -278,7 +277,7 @@ IMPORTANT: This skill is read-only. Do not:
 
 SKILL.md は下限側（省略させない）の指示に偏りやすく、上限側の規定を置き忘れる。
 Opus 5 は既定の応答が以前のモデルより長く、作業中のナレーションも増える。
-effort を下げても目に見える応答は確実には短くならないので、量はプロンプトで明示的に指示する。
+effort を下げても目に見える応答は確実には短くならないので、量はプロンプトで明示的に指示する（[[Claude-effort]]「何を制御して、何を制御しないか」セクション）。
 
 書く対象は 3 種類。
 
@@ -325,7 +324,7 @@ Do not skip hooks unless the user explicitly requests it.
 ### 強調マーカー
 
 既定は普通の書き方にする。
-`CRITICAL: You MUST use this tool when...` のような強い語調はツールや skill の過剰トリガーを引き起こすので、`Use this tool when...` に落とす（この指摘の出典は主語が Opus 4.5 / 4.6）。
+`CRITICAL: You MUST use this tool when...` のような強い語調はツールや skill の過剰トリガーを引き起こすので、`Use this tool when...` に落とす（Opus 4.5 / 4.6 で観察された挙動）。
 
 強マーカーを使うのは、破壊的操作や安全にかかわる制約に限る。
 公式のサンプルプロンプトも `NEVER output a series of overly short bullet points` のように使い続けているので、禁止されているわけではない。
@@ -347,7 +346,7 @@ Do not skip hooks unless the user explicitly requests it.
 LLM は「この状況なら不要」と推論してステップを省く。禁止指示 1 行では止まらないため、設計段階で解釈の余地を減らす。
 
 - 自然言語指示をコマンドリテラルに置き換える。範囲・対象を語で指定すると解釈で狭まる（「直下 + サブディレクトリ」→ 一部が漏れる）。実行するコマンドそのものを書けば解釈の余地がなくなる
-- resist-table（言い訳対戦表）で省略の推論を先回りする。「〜だから省略してよい」という浮かびがちな言い訳と、それへの現実を表で対置する。省略が起きやすいのはモード分岐（quick 等）で「このモードなら不要」と推論する地点
+- resist-table で省略の推論を先回りする。「〜だから省略してよい」という浮かびがちな言い訳と、それへの現実を表で対置する。省略が起きやすいのはモード分岐（quick 等）で「このモードなら不要」と推論する地点
 - 省略されて困る動作は 1 箇所でなく複数箇所（全体像 / 言い訳対戦表 / 必須動作）に置く。1 箇所の指示は文脈次第で読み飛ばされる
 - 層を分ける。SKILL.md のチェックリストは advisory（順番を忘れないための指針）。誠実性の担保が必要な制約は deterministic 層（hooks / settings / allowed-tools）で締める
 

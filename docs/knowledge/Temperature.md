@@ -4,7 +4,7 @@ tags: [Temperature, decoding, サンプリング, LLM, exploration-exploitation]
 sources:
   - https://platform.claude.com/docs/ja/build-with-claude/prompt-engineering/claude-prompting-best-practices
 created: 2026-05-26
-updated: 2026-08-10
+updated: 2026-08-11
 ---
 
 # Temperature
@@ -27,19 +27,15 @@ Temperature は decoding における [[探索・活用ジレンマ]] の制御�
 ## Claude API での扱い
 
 Anthropic は [[Claude]] Opus 4.7 以降で API パラメータとしての Temperature を廃止し、出力調整をプロンプトに委ねる方式に移行した。
-同じ時期に思考の制御方法も入れ替わっている。
+Sonnet 5 / Fable 5 も同じく受け付けない。
+サンプリングの温度そのものが無くなったわけではなく、呼び出し側から触れる面が閉じた形になる。
 
-- `temperature` — Opus 4.7 以降で廃止
-- `budget_tokens`（拡張思考の手動バジェット）— Opus 4.6 / Sonnet 4.6 では動くが非推奨、4.7 以降のモデルでは 400 エラーになる
-- `thinking: {type: "adaptive"}`（適応的思考）— モデルがいつどれだけ思考するかを動的に決める方式。4.6 以降はこちらが主
+出力の多様性を動かしたいなら、プロンプトで指示する。
+多様性が目的だったなら「毎回違う言い回しにする」のような指示に、出力を安定させたかったなら形式や語彙を明示的に固定する指示に置き換える。
+effort は消費量を動かすパラメータで多様性の制御には使えない（[[Claude-effort]]「何を制御して、何を制御しないか」セクション）。
 
-思考の深さは effort（`low` / `medium` / `high` / `xhigh` / `max`）で制御する。
-Sonnet 5 は Claude API と Claude Code のどちらも既定が `high`。
-Opus 5 は Claude API の既定が `high` で、`high` の明示は省略時と等価。
-トークンの厳格な上限が要る場合は `max_tokens` を使う。
-
-サンプリングの温度そのものが無くなったわけではなく、呼び出し側から触れる面が閉じた。
-出力の多様性を動かしたいなら、プロンプトで指示するか effort を変える。
+同じ時期に思考の制御方法も入れ替わった。
+適応的思考と effort による制御は [[Claude-effort]] を参照。
 
 ## リスト生成のパラドックス
 
@@ -53,12 +49,14 @@ T=0 は「確率の奴隷」になり、確率上位の「続行」を選び続�
 
 ## Repetition Penalty
 
-既出トークンの Logits を後付けに引き下げ、自己回帰ループを物理的に阻害する手法。
+既出トークンのロジットを後付けで引き下げ、自己回帰ループを物理的に阻害する手法。
 「の」「は」などの頻出語まで制限がかかり、文章が不自然になるリスクがある。
 
 ## 関連
 
 [[探索・活用ジレンマ]] / RLHF / Top-p
+
+[[Claude-effort]] — Temperature 廃止後に思考とトークン消費を制御するパラメータ
 
 Temperature パラメータの査読論文では、AdapT 動的調整や 0-1 範囲の有意差なしなど、固定温度の前提を問い直す研究が報告されている。
 Temperature・Top-p の各社 API 仕様比較では、各ツール（GitHub Copilot / Cursor 等）の実態差が報告されている。
