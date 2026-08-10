@@ -3,12 +3,12 @@ type: entity
 tags: [claude-code, plugin, review, code-review]
 sources: []
 created: 2026-07-09
-updated: 2026-07-09
+updated: 2026-07-26
 ---
 
 # Claude Code Review Plugin
 
-[[Claude]] Code に組み込みの `/code-review` コマンド。Anthropic 公式。
+Claude Code に組み込みの `/code-review` コマンド。Anthropic 公式。
 `--comment` で PR にインラインコメント投稿、`--fix` で直接 Edit 反映。
 
 GitHub: [anthropics/claude-code](https://github.com/anthropics/claude-code/blob/main/plugins/code-review/README.md)
@@ -153,6 +153,23 @@ Haiku が以下の 4 条件をチェックし、いずれか 1 つでも真な�
 
 CLAUDE.md の進化がレビュー精度を上げる循環を想定しているが、CLAUDE.md への書き戻しは自動ではなくチームの手動更新が前提。
 
+## 呼び出し制約: 他の skill から起動できない
+
+`disable-model-invocation: true` が付いているため、Skill ツールからは起動できない。
+ユーザーがコマンドを打つ経路だけが有効で、モデル側からの呼び出しは次のエラーで弾かれる。
+
+```text
+Skill code-review cannot be used with Skill tool due to disable-model-invocation
+```
+
+この制約は「`/code-review` を内部で呼ぶラッパー skill」という設計を不成立にする。
+ラッパー自身をユーザーが起動しても、その中でモデルが `/code-review` を呼ぶ段で止まる。
+結果を保存したり後処理を足したい場合の選択肢は 2 つ。
+
+- ユーザーが `/code-review` を打った後に、別の skill で context に残った findings を保存する（コマンド 2 回）
+- 組み込みに依存せず、自前で観点別のレビューエージェントを回す
+
 ## llm-wiki での利用
 
-lw-code-review のラッパー元。`/code-review` を内部で呼び出し、結果を `/tmp/lw-review/` に保存する設計で利用予定。
+lw-code-review のラッパー元として設計されたが、上記の呼び出し制約により peer 実装（自前で観点別エージェントを回す）へ方針変更した。
+findings の保存先は `/tmp/lw-review/<issue-name>/`。

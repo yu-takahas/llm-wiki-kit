@@ -95,6 +95,5 @@ effort はリクエスト単位の設定で、レンダリングされたプロ�
 
 - [[Temperature]] — 出力の多様性を制御していたパラメータ、Opus 4.7 以降は API から廃止
 - [[Chain-of-Thought]] — 思考が既定のモデルでの扱い、思考オフ時のアーティファクト
-- [[Claude]] — モデルごとの思考の既定
 - [[Claude-Code-Skillの書き方]] — 出力量はプロンプトで指示する（effort では制御しない）
 - [[Sub-Agent]] — subagent に低い水準を割り当てる使い分け

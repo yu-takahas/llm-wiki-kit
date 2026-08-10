@@ -30,7 +30,7 @@ Constitutional AI は無害性の人間ラベリングを原則ベースの AI �
 
 ## 憲法の公開
 
-2026 年 1 月 21 日、Anthropic は [[Claude]] の新しい憲法を公開した。
+2026 年 1 月 21 日、Anthropic は Claude の新しい憲法を公開した。
 約 23,000 語、CC0 1.0（パブリックドメイン）でリリース。
 4 層の価値階層を定義: (1) 安全性、(2) 倫理、(3) Anthropic ガイドライン準拠、(4) 有用性。
 AI の意識と道徳的地位の可能性に公式に言及した初の主要 AI 企業文書でもある。
@@ -39,7 +39,6 @@ AI の意識と道徳的地位の可能性に公式に言及した初の主要 A
 ## 関連
 
 - Anthropic — 提案元
-- [[Claude]] — Constitutional AI で訓練されるモデル
 - Amanda-Askell — 憲法の主著者
 - RLHF — 比較対象の訓練手法
 - InstructGPT — RLHF の先行実装

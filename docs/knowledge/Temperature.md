@@ -26,7 +26,7 @@ Temperature は decoding における [[探索・活用ジレンマ]] の制御�
 
 ## Claude API での扱い
 
-Anthropic は [[Claude]] Opus 4.7 以降で API パラメータとしての Temperature を廃止し、出力調整をプロンプトに委ねる方式に移行した。
+Anthropic は Claude Opus 4.7 以降で API パラメータとしての Temperature を廃止し、出力調整をプロンプトに委ねる方式に移行した。
 Sonnet 5 / Fable 5 も同じく受け付けない。
 サンプリングの温度そのものが無くなったわけではなく、呼び出し側から触れる面が閉じた形になる。
 
