@@ -31,8 +31,8 @@ Andrej-Karpathy の LLM Wiki のような、大きな構造定義をどこに置
 
 MEMORY.md の 200 行 / 25KB 制限は MEMORY.md のみに適用される（先に達した方が上限）。
 CLAUDE.md は長さに関係なく全文ロードされる（ただし短い方が遵守率は高い）。
-上限に近いと短縮を促し、超えると書き込み自体は成功したうえでエラーを返す（超過分は次回ロード時に落ちるため）。
-計測対象はロードされる内容だけで、YAML frontmatter と block-level HTML コメントは除外される（v2.1.211 以降、それ以前は生ファイルを計測していた）。
+上限に近づくと Claude Code が短縮を促し、超えた状態で書き込むと書き込み自体は成功したうえでエラーが返る（超過分は次回ロード時に落ちるため）。
+計測対象はロードされる内容だけで、YAML frontmatter と block-level HTML コメントは除外される（v2.1.211 以降）。
 
 ## 使い分けの判断
 
@@ -51,16 +51,16 @@ CLAUDE.md は長さに関係なく全文ロードされる（ただし短い方�
 
 auto memory と rules は両方 persistent な context だが性格が違う:
 
-| 軸       | auto memory                                                   | `.claude/rules/`                   |
-| -------- | ------------------------------------------------------------- | ---------------------------------- |
-| 場所     | `~/.claude/projects/<project>/memory/`                        | `<workspace>/.claude/rules/`       |
-| ロード   | 全セッション常時                                              | paths 条件付き or 常時             |
-| スコープ | プロジェクト個別だが他プロジェクト作業中も常時 context に乗る | workspace 内、paths で path 限定可 |
-| 性格     | ユーザー個人の好み・知識・運用ルール                          | workspace 規約                     |
-| 例       | commit type の好み / 中間ファイル片付け / lead の作業分担     | wiki / issue                       |
+| 軸       | auto memory                                               | `.claude/rules/`                   |
+| -------- | --------------------------------------------------------- | ---------------------------------- |
+| 場所     | `~/.claude/projects/<project>/memory/`                    | `<workspace>/.claude/rules/`       |
+| ロード   | 全セッション常時                                          | paths 条件付き or 常時             |
+| スコープ | git リポジトリ単位。同じリポジトリのどこで作業しても乗る  | workspace 内、paths で path 限定可 |
+| 性格     | ユーザー個人の好み・知識・運用ルール                      | workspace 規約                     |
+| 例       | commit type の好み / 中間ファイル片付け / lead の作業分担 | wiki / issue                       |
 
-workspace 規約を auto memory に書くと、他プロジェクト作業中も常時 context に乗ってノイズになる。
-workspace に閉じる規約は `.claude/rules/` + `paths:` 条件付きで該当時のみロードする方が筋。
+特定の path でしか要らない規約を auto memory に書くと、その規約が関係ない作業中も常時 context に乗る。
+path で絞れる規約は `.claude/rules/` + `paths:` 条件付きにして、該当ファイルを扱う時だけロードする。
 
 ## auto memory の格納先と共有範囲
 
@@ -97,7 +97,7 @@ topic file は起動時にロードされない。
 5. Auto memory: `~/.claude/projects/<project>/memory/MEMORY.md`
 
 サブディレクトリ内の `CLAUDE.md` はオンデマンド（そのサブディレクトリのファイル Read 時にロード）。
-ancestor の `CLAUDE.md` は launch 時に全部ロードされて concatenate される。
+ancestor の `CLAUDE.md` は 起動時に全部ロードされて concatenate される。
 連結順は root から cwd に向かう向きで、同じディレクトリ内では `CLAUDE.local.md` が `CLAUDE.md` の後に来る。
 
 除外と追加のスイッチが 3 つある。
@@ -119,7 +119,7 @@ paths:
 ...
 ```
 
-- `paths` なし → `.claude/CLAUDE.md` と同じ優先度で launch 時ロード
+- `paths` なし → `.claude/CLAUDE.md` と同じ優先度で 起動時ロード
 - `paths` あり → Claude が matching file を Read した瞬間にロード、セッション中保持
 - glob + brace expansion 対応
 - symlinks 対応（複数 project で共有可能）
@@ -158,7 +158,7 @@ See @README.md for project overview.
 - 循環参照は自動検出
 - 存在しないファイルは silently 無視
 - コードブロック内の `@path` は無視
-- import されたファイルは結局 launch 時にロードされる（context 節約にはならない、組織化のため）
+- import されたファイルは結局 起動時にロードされる（context 節約にはならない、組織化のため）
 
 context を節約したいなら `paths:` rule の方を使う。
 
@@ -194,10 +194,11 @@ IMPORTANT: These instructions OVERRIDE any default behavior and you MUST follow 
 
 user message として入るので強制力はなく、遵守は指示の具体性と一貫性に依存する。
 曖昧な指示や、複数の CLAUDE.md にまたがって矛盾する指示は守られにくい。
-会話が伸びるほど遵守率が落ちるという説明は現行モデルには当てはめない（[[Lost-in-the-Middle]]「現行モデルでの適用範囲」セクション）。
+広く流布している「会話が伸びるほど遵守率が落ちる」という説明は現行モデルには当てはめない（[[Lost-in-the-Middle]]「測定されたものと外挿されたもの」セクション）。
 
 `/compact` 実行時はキャッシュクリア → ディスクから再読込 → 新しい位置に再注入される（project root の CLAUDE.md は compact 後も自動で再注入される）。
-ネストされた subdirectory の CLAUDE.md は compact 後 自動再注入されない、次にそのディレクトリのファイル Read 時に reload される。
+ネストされたサブディレクトリの CLAUDE.md は compact 後に自動再注入されない。
+次にそのディレクトリのファイルを Read した時に再読み込みされる。
 
 ## `--append-system-prompt` との違い
 
@@ -244,7 +245,7 @@ Teammate（Agent Teams）は spawn 時に通常セッションと同じプロジ
 | -------------------------------------- | ------------------------------------------------------------- |
 | CLAUDE.md                              | 200 行未満（公式目安）                                        |
 | Skill `SKILL.md`                       | 500 行未満（公式 Tip）、詳細は supporting files へ            |
-| MEMORY.md（auto memory）               | 200 行 / 25KB（超えた分は topic file に分割、自動的に）       |
+| MEMORY.md（auto memory）               | 200 行 / 25KB（超えた分は topic file へ切り出す）             |
 | Skill description + `when_to_use` 合算 | 1,536 char cap（`skillListingMaxDescChars` で変更可）         |
 | Skill listing 全体の文字予算           | context window の 1%（`skillListingBudgetFraction` で変更可） |
 
@@ -260,7 +261,7 @@ Teammate（Agent Teams）は spawn 時に通常セッションと同じプロジ
 
 ### 具体値・列挙を書かない
 
-ディレクトリ構成やコマンド説明に、ファイル名の列挙・件数・サイズ等の具体値を書くと、実装が変わるたびに CLAUDE.md の更新が必要になり、更新をサボると腐る。
+ディレクトリ構成やコマンド説明に、ファイル名の列挙・件数・サイズ等の具体値を書くと、実装が変わるたびに CLAUDE.md の更新が必要になり、更新されないまま記述が実物と食い違う。
 ディレクトリツリーは役割（何のためのディレクトリか）だけを書き、中身の列挙は `ls` に任せる。
 コマンド説明も同様に、対象件数や具体的な内容ではなく意図（何のためのコマンドか）を書く。
 
@@ -279,17 +280,6 @@ enforcement が必要なら hook。
 ## llm-wiki での適用
 
 llm-wiki における具体配置（CLAUDE.md / rules / skills / auto memory それぞれに何を置くか）は [[lw-kit-詳細設計-CLAUDE.md]] を参照。
-
-## 情報ソース
-
-- [Claude Code 公式 memory docs](https://code.claude.com/docs/en/memory)
-- [Claude Code 公式 skills docs](https://code.claude.com/docs/en/skills)
-- [Best Practices for Claude Code](https://code.claude.com/docs/en/best-practices)
-- [How Boris Uses Claude Code](https://howborisusesclaudecode.com/)
-- [Writing a good CLAUDE.md (HumanLayer)](https://www.humanlayer.dev/blog/writing-a-good-claude-md)
-- [How to Write a Good CLAUDE.md File (Builder.io)](https://www.builder.io/blog/claude-md-guide)
-- [CLAUDE.md と --append-system-prompt の違い (Zenn/CureApp)](https://zenn.dev/cureapp/articles/65b9a99d22ce2b)
-- ソースコード: `@anthropic-ai/claude-code@2.1.88`（2026-03-31 source map leak、要 verify）
 
 ## 関連
 

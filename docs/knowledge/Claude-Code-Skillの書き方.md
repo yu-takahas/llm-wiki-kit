@@ -48,6 +48,16 @@ kit の skill もこの軸で分かれる。
 `lw-commit` の Process は低自由度（実行するコマンドをリテラルで書く）、`lw-doc-review` の観点は高自由度（何を見るかだけ示す）。
 新しい skill を設計する時に、どちらへ寄せるかを先に決める。
 
+## 評価を先に作る
+
+公式の推奨は、詳しい手順を書く前に評価を作ること。
+順序は「skill 無しで代表タスクを実行して失敗を記録する → その失敗を突く評価を 3 つ作る → 基準値を測る → 評価を通る最小限の指示を書く → 反復する」。
+
+想像した要件ではなく実際に起きた失敗から書き始めるので、使われない記述が減る。
+
+kit のミスドリブン更新（試運転で見つかった失敗を言い訳対戦表に追記する）は近い役割を持つが、こちらは skill を書いた後の改善サイクル。
+書く前の段階に評価を置くと、最初から短く書ける。
+
 ## 基本構造
 
 skill 名はディレクトリ名で決まる。
@@ -65,10 +75,11 @@ my-skill/
 
 参照は 1 段階まで（SKILL.md → reference.md）。
 ネストすると、Claude が `head -100` のようなコマンドで部分的にプレビューして全文を読まないことがあり、情報が欠ける。
-この設計原則の詳細は [[Progressive-Disclosure]]。
 
 100 行を超える reference ファイルには冒頭に目次を置く。
 部分読みされた場合でも、何が書いてあるかの全体像は見える。
+
+何を SKILL.md に残して何を別ファイルへ逃がすかの判断基準は [[Progressive-Disclosure]]「何を分離するか」セクション。
 
 ## 命名
 
@@ -111,11 +122,11 @@ hooks: ...                     # skill 固有 hook
 
 ## description のコツ
 
-- **third person で書く**（公式用語、`I can help...` / `You can use...` は NG）
+- third person で書く（公式用語、`I can help...` / `You can use...` は NG）
   - action-oriented 三単現動詞で始める：`Explains` / `Renders` / `Validates`
   - `Use when ...` 単体は命令形で third person 視点を満たさないため、action description と組み合わせる
 - `description` 単体は 1,024 char 以内。frontmatter のバリデーション上限で、超えると通らない
-- `description` + `when_to_use` の合算は skill listing で 1,536 char に切り詰められる（`skillListingMaxDescChars` で変更可）。上限が 2 種類あるので混同しない
+- `description` + `when_to_use` の合算にはこれとは別の上限があり、skill listing で切り詰められる（数値と設定キーは「コンテキスト消費」セクション）。上限が 2 種類あるので混同しない
 - 英語で書く（context 効率）
 - ユーザーが言いそうなフレーズを含める
 
@@ -132,7 +143,7 @@ description は system prompt に injection されるため、視点ブレが Cl
 
 ```yaml
 description: Explains code with visual diagrams and analogies. Use when explaining how code works, teaching about a codebase, or when the user asks "how does this work?"
-description: Renders a raw source into the llm-wiki wiki. Triggers when the lead adds a new raw source and needs it propagated as 5-10 wiki pages.
+description: Renders a raw source into the llm-wiki. Triggers when the lead adds a new raw source and needs it propagated as 5-10 wiki pages.
 ```
 
 ### 悪い例
@@ -155,6 +166,26 @@ description は毎回 system prompt に積まれる。
 
 予算超過時は skill 名のみにフォールバックする。
 bundled skill（組み込み）は切り詰め対象外。
+
+## 本文の推奨構造
+
+```markdown
+# Skill Title
+
+## Inputs
+- `$arg_name`: 入力の説明
+
+## Goal
+明確な目的の記述
+
+## Steps
+
+### 1. ステップ名
+やること。
+
+Success criteria: このステップ完了の基準
+Rules: 守るべきルール
+```
 
 ## 本文の書き方
 
@@ -212,18 +243,21 @@ OK: Use the Read tool to read files. Do NOT use cat or head.
 ### 肯定形を既定にする
 
 スタイルや挙動の誘導は肯定形で書く。
-資料は「してはいけないことではなく、すべきことを伝える」「望むスタイルの肯定的な例は、何をしないかについての指示より効果的」としている。
+公式のプロンプティング指針は、してはいけないことではなくすべきことを伝えるよう勧めている。
+望むコミュニケーションスタイルの肯定的な例は、何をしないかについての指示よりも効果的である傾向がある、という説明。
 
-否定形を使うのは、例外なしの禁止事項（破壊的操作・安全にかかわるもの）に限る。
+否定形を使うのは、破壊的操作や安全にかかわる禁止事項に限る。
 その場合も理由を添えると効く。
 
 ```text
-NEVER skip hooks (--no-verify) unless the user explicitly requests it.
 Do not create documentation files unless explicitly requested.
 ```
 
-資料の対比例は「省略記号を使うな」より「読み上げエンジンが発音できないので使わない」の方が効く、という形。
+公式が挙げる対比例は、省略記号を使うなと書くより、読み上げエンジンが発音できないので使わないと理由を書く方が効く、という形。
 禁止の字面だけ書くより、なぜそうしてほしいかを添える方が他の場面にも一般化する。
+
+禁止であることと例外を持つことは両立する。
+逃げ道の書き方は「例外条件を `unless` で」セクション。
 
 ### 制約は具体的な操作を列挙
 
@@ -293,19 +327,19 @@ Do not skip hooks unless the user explicitly requests it.
 既定は普通の書き方にする。
 `CRITICAL: You MUST use this tool when...` のような強い語調はツールや skill の過剰トリガーを引き起こすので、`Use this tool when...` に落とす（この指摘の出典は主語が Opus 4.5 / 4.6）。
 
-強マーカーを使うのは例外なしの制約に限る。
+強マーカーを使うのは、破壊的操作や安全にかかわる制約に限る。
 公式のサンプルプロンプトも `NEVER output a series of overly short bullet points` のように使い続けているので、禁止されているわけではない。
 効き目の源泉は稀少性で、全部を `CRITICAL` にすると何も `CRITICAL` でなくなる。1 ファイルに数箇所まで。
 
-| マーカー           | 使う場面                                           |
-| ------------------ | -------------------------------------------------- |
-| `IMPORTANT:`       | 読み飛ばされると困る指示                           |
-| `NEVER` / `ALWAYS` | 例外なしのルール（破壊的操作・安全にかかわるもの） |
-| `Do NOT` / `MUST`  | 強い禁止・義務                                     |
-| `<example>`        | few-shot 例（強調ではなく構造化）                  |
+| マーカー           | 使う場面                          |
+| ------------------ | --------------------------------- |
+| `IMPORTANT:`       | 読み飛ばされると困る指示          |
+| `NEVER` / `ALWAYS` | 破壊的操作・安全にかかわる禁止    |
+| `Do NOT` / `MUST`  | 強い禁止・義務                    |
+| `<example>`        | few-shot 例（強調ではなく構造化） |
 
 トリガー条件と頻度指示には使わない。
-「迷ったら使う」「デフォルトで使う」の型は過剰トリガーを招くと資料が名指ししている。
+「迷ったら使う」「デフォルトで使う」の型は、公式のプロンプティング指針が過剰トリガーを招くものとして名指ししている。
 装飾バナー（`=== CRITICAL: ===`）も使わない。
 
 ## 手順省略を仕組みで防ぐ
@@ -317,19 +351,9 @@ LLM は「この状況なら不要」と推論してステップを省く。禁�
 - 省略されて困る動作は 1 箇所でなく複数箇所（全体像 / 言い訳対戦表 / 必須動作）に置く。1 箇所の指示は文脈次第で読み飛ばされる
 - 層を分ける。SKILL.md のチェックリストは advisory（順番を忘れないための指針）。誠実性の担保が必要な制約は deterministic 層（hooks / settings / allowed-tools）で締める
 
-## 評価を先に作る
+## 参照を解決可能に保つ
 
-公式の推奨は、詳しい手順を書く前に評価を作ること。
-順序は「skill 無しで代表タスクを実行して失敗を記録する → その失敗を突く評価を 3 つ作る → 基準値を測る → 評価を通る最小限の指示を書く → 反復する」。
-
-想像した要件ではなく実際に起きた失敗から書き始めるので、使われない記述が減る。
-
-kit のミスドリブン更新（試運転で見つかった失敗を言い訳対戦表に追記する）は近い役割を持つが、こちらは skill を書いた後の改善サイクル。
-書く前の段階に評価を置くと、最初から短く書ける。
-
-## リンクを腐らせない
-
-SKILL.md / rule 本文に他 rule / Skill / wiki page への path 列挙や 「関連」セクションを並べると、参照先の rename / split / merge で腐る。
+SKILL.md / rule 本文に他 rule / Skill / wiki page への path 列挙や 「関連」セクションを並べると、参照先の rename / split / merge で解決しなくなる。
 Claude は `paths` 条件付きロード / 常時ロード / wiki link 解決で他 rule や wiki page を別途取得できる前提で、本体は zero-shot で書ける指示に絞る。
 
 具体的な書き方:
@@ -416,10 +440,7 @@ plugin skill は `plugin-name:skill-name` の名前空間を持つので他の�
 Claude Code は `/doctor` / `/code-review` / `/debug` / `/loop` / `/batch` 等を bundled skill として配布している。
 `disableBundledSkills` で一括無効にできる（`/doctor` だけは残る）。
 
-2026-06-25 の実測では逆の結果が出ていた（`~/.claude/skills/code-review/` に自作版を置いても built-in のフローが走り、skill 一覧にも built-in の description が出た）。
-現行仕様では自作側が勝つ。
-
-どちらにせよ prefix を付けておけば衝突自体が起きない（llm-wiki では `lw-` prefix を採用）。
+prefix を付けておけば衝突自体が起きない（llm-wiki では `lw-` prefix を採用）。
 
 ## Permissions
 
@@ -428,26 +449,6 @@ Skill                  # 全 skill 無効
 Skill(commit)          # 特定 skill のみ許可
 Skill(review-pr *)     # プレフィックスマッチ
 Skill(deploy *)        # 特定 skill を deny
-```
-
-## 本文の推奨構造
-
-```markdown
-# Skill Title
-
-## Inputs
-- `$arg_name`: 入力の説明
-
-## Goal
-明確な目的の記述
-
-## Steps
-
-### 1. ステップ名
-やること。
-
-Success criteria: このステップ完了の基準
-Rules: 守るべきルール
 ```
 
 ## 関連

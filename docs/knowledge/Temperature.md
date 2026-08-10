@@ -4,7 +4,7 @@ tags: [Temperature, decoding, サンプリング, LLM, exploration-exploitation]
 sources:
   - https://platform.claude.com/docs/ja/build-with-claude/prompt-engineering/claude-prompting-best-practices
 created: 2026-05-26
-updated: 2026-08-09
+updated: 2026-08-10
 ---
 
 # Temperature
@@ -34,7 +34,8 @@ Anthropic は [[Claude]] Opus 4.7 以降で API パラメータとしての Temp
 - `thinking: {type: "adaptive"}`（適応的思考）— モデルがいつどれだけ思考するかを動的に決める方式。4.6 以降はこちらが主
 
 思考の深さは effort（`low` / `medium` / `high` / `xhigh` / `max`）で制御する。
-Opus 5 と Sonnet 5 は Claude API と Claude Code で既定が `high`。
+Sonnet 5 は Claude API と Claude Code のどちらも既定が `high`。
+Opus 5 は Claude API の既定が `high` で、`high` の明示は省略時と等価。
 トークンの厳格な上限が要る場合は `max_tokens` を使う。
 
 サンプリングの温度そのものが無くなったわけではなく、呼び出し側から触れる面が閉じた。

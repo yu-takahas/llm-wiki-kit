@@ -5,7 +5,7 @@ sources:
   - https://platform.claude.com/docs/ja/about-claude/models/overview
   - https://platform.claude.com/docs/ja/about-claude/models/whats-new-opus-5
 created: 2026-07-07
-updated: 2026-08-09
+updated: 2026-08-10
 ---
 
 # Claude
@@ -28,8 +28,9 @@ AI の安全性研究と能力開発を両立する設計思想のもと、[[Con
 
 ## 現行ラインナップ
 
-Fable 5 / Opus 5 / Sonnet 5 / Haiku 4.5。
-Opus 4.8 以前はレガシー扱いで、引き続き利用できる。
+2026 年 8 月時点。
+主力は Fable 5 / Opus 5 / Sonnet 5 / Haiku 4.5 で、Opus 4.8 / 4.7 / 4.6 と Sonnet 4.6 も現行として提供が続く。
+公式がレガシーに分類しているのは Opus 4.5 / Opus 4.1 / Sonnet 4.5。
 
 | モデル    | コンテキスト | 最大出力 | 思考                   |
 | --------- | ------------ | -------- | ---------------------- |
@@ -37,6 +38,8 @@ Opus 4.8 以前はレガシー扱いで、引き続き利用できる。
 | Opus 5    | 1M           | 128k     | 適応的思考、既定でオン |
 | Sonnet 5  | 1M           | 128k     | 適応的思考、既定でオン |
 | Haiku 4.5 | 200k         | 64k      | 拡張思考のみ           |
+
+Mythos 5 は Fable 5 と同等の能力・価格・API 仕様を持つが、Project Glasswing の参加者しか使えないため一般提供のラインナップには含めない。
 
 ## 主な特徴
 
