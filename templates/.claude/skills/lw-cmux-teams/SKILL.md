@@ -137,6 +137,7 @@ teammate 構成・運用に関する制約。フロー横断で適用する。
 - teammate は作業開始前にアプローチを lead に報告する。lead はアプローチが妥当と判断したらユーザーに確認せず承認してよい
 - lead は teammate を shutdown する前に必ずユーザーに「cleanup 進めていい?」を確認する
 - 一時的な調査・レビュー用 subagent（finder 等、結果だけ欲しいもの）は `name` なしで spawn する。team アクティブ中に `name` 付きで Agent を呼ぶと teammate 化して管理対象が増える
+- task を使う場合、所有者の設定は dispatch より前に済ませる。後から設定すると当人に割り当て通知が飛び、報告済みの teammate との往復が生じる
 
 ## 既知の制約
 

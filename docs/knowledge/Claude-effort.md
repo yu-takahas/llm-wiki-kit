@@ -13,6 +13,11 @@ Anthropic の API で、モデルが応答に費やすトークン量を制御�
 `output_config.effort` に `low` / `medium` / `high` / `xhigh` / `max` のいずれかを渡す。
 既定は `high` で、`high` の明示は省略時と等価。
 
+Claude Code では skill の frontmatter が同名のフィールドを持ち、その skill の実行中だけセッションの水準を上書きする。
+値は API と同じ 5 種で、使える水準はモデルによる。
+既定が `high` である以上、`high` の明示が効くのはセッション側を下げているときだけで、実際に挙動を変えるのは `low` / `medium` を設定した skill になる。
+skill ごとに何を設定するかの基準は [[プロンプト設計原則]]「effort は skill 単位で決める」セクション。
+
 呼び出し側から触れる調整つまみとしては、廃止された [[Temperature]] の後を占める位置にある。
 ただし動かすものが違う。
 Temperature が出力分布の鋭さを変えるのに対し、effort は思考・ツール呼び出し・応答テキストを含めた消費量そのものを動かす。
