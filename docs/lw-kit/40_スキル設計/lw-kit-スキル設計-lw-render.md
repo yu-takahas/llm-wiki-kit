@@ -65,10 +65,11 @@ skill 名だけでなく動作概念としても「render」を使う（`/lw-ren
 
 ## 許可ツールの最小化
 
-Read / Write / Edit / Glob / Grep + `Bash(wc:*)`。
+Read / Write / Edit / Glob / Grep + `Bash(wc:*)` / `Bash(tail:*)`。
 最小権限の原則([[Claude-Code-Skillの書き方]]「allowed-tools」セクション)に従い、Process 9 ステップで実際に必要なものに絞っている。
 汎用 `Bash` は使わない(`rm` / `mv` / `git` 等まで暗黙に許可されてしまう)。
-`Bash(wc:*)` だけ入れた理由: 本文長 / 行数は Read 後の文字列計測でも代替可だが、`wc` の方が確定的で実装が短い。
+`Bash(wc:*)` を入れた理由: 本文長 / 行数は Read 後の文字列計測でも代替可だが、`wc` の方が確定的で実装が短い。
+`Bash(tail:*)` を入れた理由: Process 9 の log.md 追記が append-only で、rule が追記前の末尾確認を要求する。log.md は数千エントリまで育つので Read で全体を読む代替は重い。
 具体的な用途は SKILL.md を参照。
 
 ## 12 要件の llm-wiki-kit 具体化
@@ -146,15 +147,19 @@ raw を読み終わったら以下の定型句で lead に提示。
 render 完了時に「この page を引用している他 page」を `30_wiki/` と `40_project/` から grep で取得して出力。
 形式: `- [[other-page-title]] — <該当行の前後 1 行>`
 
-### 8. log / index は lead 自走、case root 「関連 raw」セクションのラベルも同タイミング
+### 8. log / index と case root 「関連 raw」セクションのラベルは render 完了後に更新
 
-render 完了後、lead が CLAUDE.md `## log / index` のターン終了前セルフチェック準拠で log.md / index.md を自走更新する。
-skill は log.md / index.md に触らない（下書き提示もしない）。
+render 完了後、同じセッションで log.md / index.md を更新する。
+ユーザーの指示を待たず、CLAUDE.md `## log / index` のターン終了前セルフチェック準拠で追記する。
 
 同タイミングで case root（`40_project/<案件>/<案件>.md`）の「関連 raw」セクションの行を「（未 render）→（render 済み、[[<page-title>]]）」に更新する。
 render 開始時に raw を `[[link]]` 候補として書いた場合は、完了後に状態ラベルを切り替える運用。
 
-参照:「入出力 / 副作用 / エラー時の振る舞い」セクション
+当初は「skill は log.md / index.md に触らない、lead が自走更新する」と書いていた。
+用語集の `lead` はメインの Claude Code セッションを指すが、この表現が「ユーザーが更新する」と読まれ、render 後に log / index が更新されない事故が起きた。
+更新の責務は CLAUDE.md のターン終了前セルフチェックが持っており、[[lw-kit-スキル設計-lw-commit]] のステップ 2 も同じ立場を取る。
+
+参照:「エラーハンドリング」セクション
 
 ### 9. よくあるミスのセクション
 
@@ -249,7 +254,7 @@ escape hatch として `just render` で議論を skip できる。
 
 具体的なケース表は SKILL.md を参照。
 方針: リトライ / 自動回復は持たない(lead 投げで十分)。
-skill は log.md / index.md / raw 元ファイルに触らない(lead 自走更新)。
+skill が触らないのは raw 元ファイルのみ。log.md / index.md は render 完了後に更新する(「12 要件の llm-wiki-kit 具体化」セクションの 8)。
 
 ## SKILL.md の構造設計
 

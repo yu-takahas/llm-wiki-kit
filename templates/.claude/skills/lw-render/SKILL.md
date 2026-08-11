@@ -2,7 +2,7 @@
 name: lw-render
 description: Renders a raw source (`10_raw/<file>.md`) into the llm-wiki (`30_wiki/` 汎用 or `40_project/<案件>/` 案件固有). Triggers when the lead adds a new raw source and needs it propagated as 5-10 wiki pages across entity / concept / synthesis categories.
 argument-hint: "<raw-file-path>"
-allowed-tools: [Read, Write, Edit, Glob, Grep, "Bash(wc:*)"]
+allowed-tools: [Read, Write, Edit, Glob, Grep, "Bash(wc:*)", "Bash(tail:*)"]
 disable-model-invocation: true
 ---
 
@@ -19,10 +19,10 @@ raw（`10_raw/<file>.md`）を llm-wiki（`30_wiki/` 汎用 / `40_project/<案�
 事前 → 1. raw 完読 → 2. wiki / project index 読込
      → [3. 議論ステップ ← lead approval gate（4 判断項目: 出力先 / type / title / 関連 entity 置き場）]
      → 4. 議論で決まった type で page 作成 → 5. entity / concept / synthesis 生成 or update → 6. 矛盾保持
-     → 7. backlink 走査 → 8. 影響範囲報告 → 9. lead 自走運用ガイド（log/index + case root の「関連 raw」セクション）
+     → 7. backlink 走査 → 8. 影響範囲報告 → 9. 記録更新（log/index + case root の「関連 raw」セクション）
 ```
 
-書く（4-6）／検査する（7-8）／引き継ぐ（9）の 3 フェーズ。
+書く（4-6）／検査する（7-8）／記録する（9）の 3 フェーズ。
 3 は書く前の最後の関門、7-8 は事後検査。
 
 ## 言い訳対戦表（起動前チェック）
@@ -206,15 +206,16 @@ render で作成または編集した page を引用している他 page を `30
 - [[<other-page-title>]] — <該当行の前後 1 行>
 ```
 
-### 9. render 完了後の lead 自走運用ガイド
+### 9. 記録更新
 
-skill は log.md / index.md / case root に触らない（下書き提示もしない）。
-render 完了後、lead が CLAUDE.md `## log / index` のターン終了前セルフチェック準拠で次の 2 つを自走更新する:
+render 完了後、同じセッションで次の 2 つを更新する。ユーザーの指示を待たない。
 
-1. log.md / index.md への追記（`.claude/rules/log-index.md` のフォーマット準拠）
+1. log.md / index.md への追記（`.claude/rules/log-index.md` のフォーマット準拠、CLAUDE.md `## log / index` のターン終了前セルフチェックに従う）
 2. case root（`40_project/<案件>/<案件>.md`）の「関連 raw」セクション行を「（未 render）→（render 済み、[[<page-title>]]）」に更新
 
 render 開始時に raw を `[[link]]` 候補として書いた場合は、完了後にラベルを切り替える運用。
+
+`log.md` は append-only。追記の前に実際の末尾を確認する（`.claude/rules/log-index.md` の「append-only」セクション）。
 
 ## よくあるミス（render 中 + 完了後チェック）
 
@@ -224,7 +225,7 @@ render 開始時に raw を `[[link]]` 候補として書いた場合は、完�
 2. 時系列追記（`## YYYY-MM-DD 追記`）でセクションを増やす（既存に追加違反）
 3. 矛盾を見つけて消す、または無視する（`contradictions:` frontmatter に残さない）
 4. バックリンク走査を省略する
-5. case root の「関連 raw」セクションのラベル（未 render / render 済み）を更新し忘れる（「Process 9」違反）
+5. log.md / index.md の追記、または case root の「関連 raw」セクションのラベル（未 render / render 済み）の更新を忘れる。ユーザーがやるものと解釈して委ねるのも同じ違反（「Process 9」違反）
 6. entity の「<ワークスペース名> での参照」セクションに流動情報（テストケース数 / version / 時系列ステータス）を書く（「Process 5」粒度ガイド違反）
 7. raw 外の関連概念を lead 確認なしに entity 追加する（「Process 3」議論ステップ違反、推測 hallucination）
 8. raw 引用を本文中に書く（`(raw L<行番号>)` / `(raw「<セクション>」セクション)`）。raw は基本永続だが行数 / セクション名は変動しうる、wiki 自立性のため frontmatter `sources:` で出典追跡を完結させる（「Process 4」違反）
@@ -249,6 +250,6 @@ NEVER do these unless lead explicitly overrides.
 ## 必須動作
 
 - バックリンク走査前の Grep は省略不可（Process 7）
-- log.md / index.md / case root の「関連 raw」セクションは lead 自走更新、skill は触らない（Process 9）
+- log.md / index.md / case root の「関連 raw」セクションの更新は render 完了後に必ず実行する（Process 9）。ユーザーに委ねない
 
 `/lw-lint` 系の整合性チェックは本 skill の対象外。render は render のみに集中する。
