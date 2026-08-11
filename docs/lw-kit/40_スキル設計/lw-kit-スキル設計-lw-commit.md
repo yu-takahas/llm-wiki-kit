@@ -7,7 +7,7 @@ sources:
   - "[[lw-kit-詳細設計-CLAUDE.md]]"
   - conversation
 created: 2026-05-25
-updated: 2026-08-06
+updated: 2026-08-11
 ---
 
 # llm-wiki-kit の commit skill 設計
@@ -72,8 +72,8 @@ global 化しない理由: 手順の中身が llm-wiki-kit 固有規約に密結
 - `/lw-commit` を叩く = 今の `commit plz` の置き換え、という運用に限定すれば自動 commit を避ける運用と完全整合
 - 先例: 同じく副作用の大きい [[lw-kit-スキル設計-lw-fix-review]] / `/lw-render` も `disable-model-invocation: true`
 
-SKILL.md の `description` は [[Claude-Code-Skillの書き方]] の英語・third person 規約に反して日本語のまま維持する。
-`disable-model-invocation: true` で description は model の自動起動判定 context に載らない（手動 `/lw-commit` 起動のみ）ため、英語化の実利が無いと判断した。
+SKILL.md の `description` は日本語のまま維持する。
+[[Claude-Code-Skillの書き方]]「呼び出し制御」セクションが `disable-model-invocation: true` の skill に認めている例外に従う（description は model の自動起動判定 context に載らないので、英語化の実利がない）。
 将来 model 自動起動を有効化する場合は英語・三単現に直す。
 
 同じ制御が `/lw-update-issue` と `/lw-retro` にも掛かっている。
@@ -85,7 +85,7 @@ SKILL.md の `description` は [[Claude-Code-Skillの書き方]] の英語・thi
 
 Read / Edit + コマンド単位に絞った Bash。
 Write は持たない（page の新規作成は `/lw-retro` の責務で、本 skill が触るのは既存ファイルへの追記だけ）。
-`grep` / `find` は関連 issue の一巡に、`date` は step 1 で issue を更新する場合の 🪣 経緯の見出しに使う。
+issue の一巡と日時の実測に要るコマンドだけを個別に許可する。
 許可リストの具体値は SKILL.md が正本。
 設計書に写すと、SKILL.md 側で増減したときに気づかず乖離する。
 
@@ -94,25 +94,30 @@ Write は持たない（page の新規作成は `/lw-retro` の責務で、本 s
 `Bash(git commit:*)` は allowed-tools に**含めない**。
 これが本 skill の設計上の要点。
 
+前提にしている運用要件は「`git add` は許可、`git commit` は毎回ユーザー確認」。
+利用側の観察台帳を読まなくてもこの 1 行で設計判断が辿れるよう、ここに書いておく。
+
 - allowed-tools に列挙したコマンドは skill 実行中 permit prompt なしで通る。`git commit` を外すと commit 実行時だけ通常の permit gate に落ち、ユーザー確認が走る
 - これは「skill には最新化 / add まで自走させてよいが、commit 時だけはユーザーが別ターミナルで作業内容を確認してから通す」という運用要件（`50_feedback/feedback-観察-作業スタイル.md`（ワークスペース側） / CLAUDE.md の add は allow / commit は deny 規約、[[lw-kit-詳細設計-CLAUDE.md]]）を、skill 自身の宣言として明示する形
 - ユーザー側 permit 設定（settings.json の deny）にも依存せず、skill 単体で gate が成立する。「skill は自動 commit しない」を allowed-tools が自己文書化する
-- step 3（commit）は message を生成して `git commit` を呼ぶが、ここで必ずユーザー確認に止まる。add（step 2）と commit（step 3）を別ステップにする設計（`&&` で繋がない）と整合する
+- ステップ 3（commit）は message を生成して `git commit` を呼ぶが、ここで必ずユーザー確認に止まる。add（ステップ 2）と commit（ステップ 3）を別ステップにする設計（`&&` で繋がない）と整合する
 
 ## 既存 commit 規約との関係（参照と転記のレイヤー分け）
 
 commit 関連の記述は、規約と実行の実物 4 つと、その why を持つ設計書 2 本に分かれている。
 `/lw-commit` はこれを束ねるが、全部コピーはしない。
 
-| 実物                                                            | 内容                                                                                                                        | 性質                           | why の所在                       |
-| --------------------------------------------------------------- | --------------------------------------------------------------------------------------------------------------------------- | ------------------------------ | -------------------------------- |
-| `.claude/CLAUDE.md` グローバル                                  | git 運用（add と commit を別呼び出し、`&&` 禁止 = permit gate）/ メッセージの書き方（Conventional Commits 風 / 本文日本語） | 全プロジェクト共通の普遍ルール | [[lw-kit-詳細設計-CLAUDE.md]]    |
-| `.claude/CLAUDE.md` Git 節                                      | `type(project)` 形式 / type 一覧 / project 決定ルール（主旨優先）/ remote push 禁止                                         | llm-wiki-kit 固有規約          | [[lw-kit-詳細設計-CLAUDE.md]]    |
-| `lefthook.yml`                                                  | pre-commit: format（`prettier --write` + `git add`）/ lint:md（`markdownlint-cli2`）                                        | 実行コマンドの実体             | [[lw-kit-詳細設計-Markdown環境]] |
-| `50_feedback/feedback-観察-作業スタイル.md`（ワークスペース側） | commit type 好み / add・commit 別コマンド / 「commit は作業完了で lead 判断を委ねる」                                       | 観察データ                     | —                                |
+| 実物                                                                                | 内容                                                                                                                        | 性質                   | why の所在                       |
+| ----------------------------------------------------------------------------------- | --------------------------------------------------------------------------------------------------------------------------- | ---------------------- | -------------------------------- |
+| `~/.claude/CLAUDE.md`（kit の配布対象外）                                           | git 運用（add と commit を別呼び出し、`&&` 禁止 = permit gate）/ メッセージの書き方（Conventional Commits 風 / 本文日本語） | 利用者個人の普遍ルール | —                                |
+| `.claude/CLAUDE.md` Git 節                                                          | `type(project)` 形式 / type 一覧 / project 決定ルール（主旨優先）                                                           | llm-wiki-kit 固有規約  | [[lw-kit-詳細設計-CLAUDE.md]]    |
+| `lefthook.yml`                                                                      | pre-commit: format（`prettier --write` + `git add`）/ lint:md（`markdownlint-cli2`）                                        | 実行コマンドの実体     | [[lw-kit-詳細設計-Markdown環境]] |
+| `50_feedback/feedback-観察-作業スタイル.md`（利用側で蓄積する観察台帳。配布版は空） | commit type 好み / add・commit 別コマンド / 「commit は作業完了で lead 判断を委ねる」                                       | 観察データ             | —                                |
 
 why 列が指す設計書 2 本は規約そのものを持たない。
-[[lw-kit-詳細設計-CLAUDE.md]] は type 選好・project 命名の根拠・push 禁止理由を、[[lw-kit-詳細設計-Markdown環境]] は hook を pre-commit のみ 2 ジョブにした判断を持つ。
+[[lw-kit-詳細設計-CLAUDE.md]] は type 選好・project 命名の根拠を、[[lw-kit-詳細設計-Markdown環境]] は hook を pre-commit のみ 2 ジョブにした判断を持つ。
+
+例外が 1 つある。remote push 禁止は実物側に規約文が無く、[[lw-kit-詳細設計-CLAUDE.md]] の判断と、`setup.sh` が remote を設定しないことで担保される。
 
 ### レイヤーで分ける（全コピーでも全参照でもない）
 
@@ -122,7 +127,7 @@ why 列が指す設計書 2 本は規約そのものを持たない。
   - project 決定の判断手順（主旨優先 / 変更数で上書きしない）
 - `Co-Authored-By:` trailer → 転記も手書きもしない。根拠は「trailer を付けない」
 
-[[lw-kit-スキル設計-lw-render]] の保守規律「SKILL.md は実行時 context なので確定文言の重複保持が必要」（[[Progressive-Disclosure]] の限界）と同じ理屈。
+[[lw-kit-スキル設計-lw-render]] が言い訳対戦表の確定文言を SKILL.md へ転記しているのと同じ理屈で、実行時に手元に無いと動けないものだけを重複させる。
 
 ## trailer を付けない
 
@@ -147,46 +152,48 @@ SKILL.md 側の対応は「message に手書きしない」。
 ## 全 3 ステップの実行順と why
 
 ```text
-1. issue 最新化 → 2. log / index を追記して git add → 3. commit（permit gate）
+1. issue 最新化 → 2. log / index を追記して git add → 3. commit（permit gate） → 完了報告
 ```
 
-| #   | ステップ                   | 内容                                                                                                                              | 順序の根拠                                                                                                                                                         |
-| --- | -------------------------- | --------------------------------------------------------------------------------------------------------------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------ |
-| 1   | issue 最新化               | issue が最新化されているか確認する。未反映なら手順の有無で分岐（後述）。状態が動いていれば `1_issues.md` / `2_done.md` に転記する | 先頭に置く。issue と台帳の整合が付いていない状態で add に進むと、commit の単位と issue の記録がずれる。転記は issue の状態変化に完全従属するので同じステップに置く |
-| 2   | log / index を追記して add | 変化を `log.md` に 1 行、page 増減があれば `index.md` に追記し、関連ファイルを明示列挙して `git add`（permit gate）               | 記録を書いてから add すると、その記録自体が同じ commit に入る。分けると log だけ次の commit に落ちる                                                               |
-| 3   | commit                     | `type(project)` で message を生成して `git commit`                                                                                | add（2）と別ステップにして permit gate を維持、最後。commit 自体の最終確認は commit permit gate（terminal）が担う                                                  |
+| #   | ステップ                   | 順序の根拠                                                                                                                                                         |
+| --- | -------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------ |
+| 1   | issue 最新化               | 先頭に置く。issue と台帳の整合が付いていない状態で add に進むと、commit の単位と issue の記録がずれる。転記は issue の状態変化に完全従属するので同じステップに置く |
+| 2   | log / index を追記して add | 記録を書いてから add すると、その記録自体が同じ commit に入る。分けると log だけ次の commit に落ちる                                                               |
+| 3   | commit                     | add（2）と別ステップにして permit gate を維持、最後。commit 自体の最終確認は commit permit gate（terminal）が担う                                                  |
 
 補強が 2 点。
 
 1. add（2）と commit（3）を別ステップにするのは permit gate を維持するため。CLAUDE.md の git 運用規約（[[lw-kit-詳細設計-CLAUDE.md]]）/ `50_feedback/feedback-観察-作業スタイル.md`（ワークスペース側） の「add は allow / commit は deny で `git diff` 確認の gate」運用を skill 内でも崩さない（`&&` で 1 行にまとめない）。この commit permit prompt が最終的な内容確認 gate として機能する。
-2. issue の更新ロジックは `/lw-update-issue` が持つが、同 skill も `disable-model-invocation: true` なので `/lw-commit` からは起動できない。step 1 の未反映時は手順の有無で分岐する。今セッションで `/lw-update-issue` が起動済みなら手順が context にあるので自分で更新し、無ければ lead に起動を依頼して止まる。
+2. issue の更新ロジックは `/lw-update-issue` が持つが、同 skill も `disable-model-invocation: true` なので `/lw-commit` からは起動できない。ステップ 1 の未反映時は手順の有無で分岐する。今セッションで `/lw-update-issue` が起動済みなら手順が context にあるので自分で更新し、無ければ lead に起動を依頼して止まる。
    分岐の線を「手順を持っているか」に引くのは、止めたいのが更新そのものではなく手順を持たない更新だから。`/lw-update-issue` は 🪣 経緯に何を書くかの選別基準と書式を持っており、それを持たないまま推測で更新すると、書式は揃っていても選別が効いていない記録が積まれる。
 
 ### 反映の実行を `/lw-retro` に一本化した
 
 観察の反映（page / memory への書き込み）は `/lw-retro` が持ち、`/lw-commit` は持たない。
 
-設計書だけが移管を前提に書かれ、実装が反映を commit 側に残す乖離が長く続いていたが、解消済み。
 commit フローは畳む動作だけを持つ。
 
 副作用として、`/lw-retro` を回さない回は反映が走らない。
 反映するかどうかの判断は lead が `/lw-retro` を起動するかどうかで表す。
 commit の側から反映を促す仕組みは置かない（促すと、探索の所作が活用フローに引き戻されて exploration collapse が再発する）。
 
-## ステップ 1 該当なし時の挙動
+## 完了報告（暗黙完了しない）
 
 ステップ 1 は該当なしが普通（軽い commit では issue が動いていないことが多い）。
+該当なしを個別に報告させると、軽い commit ほど中身のない報告が並ぶ。
 
-- 「該当なければ skip + 一言報告」設計にする
-- 暗黙完了しない（[[lw-kit-スキル設計-lw-fix-review]] の「採用 0 件もサマリーを出す」と同思想）
-- 例: 「issue 最新化: 該当なし」「issue 最新化: 済み」と明示してから次へ
+報告は skill 全体の完了報告 1 回に寄せ、個別ステップの「該当なし」は出さない。
+
+- lead が skip を検出できる可視性は完了報告が担う
+- 手順を駆動するのは Process がステップを列挙している構造であって、個別報告ではない（個別の「該当なし」は自己申告で、見た証拠にならない）
+- 暗黙完了しない原則は維持する（[[lw-kit-スキル設計-lw-fix-review]] の「採用 0 件もサマリーを出す」と同じサマリー 1 回型で、構造が揃う）
 
 ## commit 時の検査は lefthook に委ねる
 
 pre-commit hook は 2 ジョブ（`lefthook.yml`、設計判断は [[lw-kit-詳細設計-Markdown環境]]）:
 
-- `format`: `npx prettier --write {staged_files}` の後 `git add {staged_files}`
-- `lint:md`: `npx markdownlint-cli2 {staged_files}`（エラーで commit 停止）
+- `format`: staged file を整形し、結果を staged に戻す
+- `lint:md`: staged file を検査し、エラーがあれば commit を停止する
 
 `/lw-commit` はこの検査を先回りして叩かない。
 commit 実行時に hook が走り、それが唯一の検査点になる。
@@ -249,4 +256,4 @@ gate の価値は「差分が出たときに lead が見るか」で決まり、
 - [[Claude-Code-settings.json]] — `attribution.commit` の設定（「trailer を付けない」の環境側）
 - `50_feedback/feedback-観察-作業スタイル.md`（ワークスペース側） — commit type 好み / add・commit 別コマンド / lead 判断委譲の観察データ
 - `lefthook.yml` — pre-commit の実行コマンド実体
-- [[lw-kit-アーキテクチャ設計]] — skill 群全体での位置づけ（背骨チェーンの「畳む」段）
+- [[lw-kit-アーキテクチャ設計]] — skill 群全体での位置づけ（「issue 管理」セクションの「畳む」段）

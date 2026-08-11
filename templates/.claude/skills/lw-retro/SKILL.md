@@ -2,7 +2,17 @@
 name: lw-retro
 description: セッションを振り返り、観察・知見を作業スタイル / wiki / project / memory へ反映する探索 skill。lead 発火、畳む前の振り返りに使う。
 argument-hint: "[jsonl から読む等の指示（省略可）]"
-allowed-tools: [Read, Edit, Write, Glob, "Bash(git diff*)", "Bash(git status*)", "Bash(bash .claude/skills/lw-retro/tanaoroshi-check.sh*)"]
+allowed-tools:
+  [
+    Read,
+    Edit,
+    Write,
+    Glob,
+    "Bash(git diff:*)",
+    "Bash(git status:*)",
+    "Bash(grep:*)",
+    "Bash(bash .claude/skills/lw-retro/tanaoroshi-check.sh:*)",
+  ]
 disable-model-invocation: true
 ---
 
@@ -17,13 +27,13 @@ disable-model-invocation: true
 ## 全体像
 
 ```text
-1. 読み返し → 2. 観察収集 + 配線点検（探索強制） → 3. リファクタ検討 → 4. 反映先判断 → 5. 骨子提示・確認・反映 → 棚卸しチェック → 完了報告
+1. 読み返し → 2. 観察収集 + 点検（配線 / TDD）（探索強制） → 3. リファクタ検討 → 4. 反映先判断 → 5. 骨子提示・確認・反映 → 棚卸しチェック → 完了報告
 ```
 
 肝は探索モードで広く集めること。
 再発の扱いは責務 4 参照。
 各責務は該当なしで終わることもありうる。
-該当なければ skip + 一言報告（暗黙完了しない）。
+該当なければ skip して次へ進む。
 
 ## 言い訳対戦表（起動前チェック）
 
@@ -48,7 +58,8 @@ disable-model-invocation: true
 
 既定は context window から読む。
 lead が「jsonl から」と指示した時だけ jsonl を読む（context が greedy に縮んだ時の外部記憶）。
-jsonl は全文を context に載せず `role` 別に抽出して粒度を絞る（user 発話と assistant テキスト応答だけ切り出し、tool_result / system reminder は捨てる）。
+jsonl は全文を Read せず、`grep` で該当行を絞ってから読む（全文ロードは context を縮めて探索を阻害する）。
+対象は user 発話と assistant のテキスト応答で、tool_result / system reminder は捨てる。
 
 ### 2. 観察収集（探索強制）
 
@@ -71,7 +82,7 @@ jsonl は全文を context に載せず `role` 別に抽出して粒度を絞る
 #### doc-review 宣言の配線点検
 
 起動条件は、冒頭の確認でレビュー結果があったか、worker に設計書を渡したか。
-どちらも無ければ skip + 一言報告（宣言は多数あり、全件走査は得られるものに対してコストが高い）。
+どちらも無ければ skip する（宣言は多数あり、全件走査は得られるものに対してコストが高い）。
 `Glob(**/.doc-review.md)` で宣言を発見し、今セッションで触った領域の宣言に絞って次を問う。
 ルート `.doc-review.md`（ルーター）の参照先も対象に含める（`Glob` は cwd 配下しか走査せず、外部 repo の宣言はルーター経由でしか辿れない）。
 
@@ -84,7 +95,7 @@ jsonl は全文を context に載せず `role` 別に抽出して粒度を絞る
 #### TDD 自己点検
 
 実装 TODO を含むセッションのみ。
-設定・文書だけのセッションでは skip + 一言報告。
+設定・文書だけのセッションでは skip する。
 
 - Red を飛ばした箇所はなかったか
 - Green で過剰実装しなかったか
@@ -108,6 +119,7 @@ jsonl は全文を context に載せず `role` 別に抽出して粒度を絞る
 - 個人の好み / セッション越え動作 → memory
 - レビュー観点（昇格・新規追記）→ `feedback-プロファイル-*.md` の該当層セクション
 - 配線ずれ → 該当する `.doc-review.md`（配線に関する事項のみ、観点そのものは書かない）
+- TDD 規律の崩れ → [[feedback-観察-失敗事例]]
 
 知見エントリに書かないもの:
 
@@ -128,6 +140,7 @@ jsonl は全文を context に載せず `role` 別に抽出して粒度を絞る
 | 要確認 | 新規 page 作成（宣言の新規作成を含む）/ memory 保存 / 主要セクション書き換え / 別リポジトリの宣言への書き戻し | 骨子・要点を提示して lead 確認 → Edit / Write |
 
 memory 保存は今回限りの指示と長期方針の区別が lead にしか付かないため、必ず確認する。
+反映先の判断に迷ったら要確認側に倒す（聞く方が安い）。
 
 ## エラーハンドリング
 
@@ -135,13 +148,11 @@ memory 保存は今回限りの指示と長期方針の区別が lead にしか�
 | ------------------------------------ | --------------------------------------------------------------- |
 | jsonl 指示だが path 不明             | session の jsonl path を lead に確認して停止                    |
 | 新規観察がゼロ（全て既存項目の再発） | 再発の事例行追記だけ行い「新規の観察なし、再発 N 件追記」と報告 |
-| 反映先の判断に迷う                   | 要確認側に倒す（聞く方が安い）                                  |
-| memory 保存                          | 必ず lead 確認を挟む（自走しない）                              |
 
 ## 必須動作
 
-- 5 責務は該当なしでも一言報告（暗黙完了しない）
 - 収集は探索モードで広げる。再発の扱いは責務 4 に従う
+- 走査の途中経過は報告せず、完了報告 1 回に寄せる（各領域・各点検の該当なしを個別に報告しない）
 - memory 保存は必ず lead 確認
 - `/lw-retro` は反映先 page / doc-review 宣言 / memory 以外を触らない（振り返りフローに閉じる、log / index 追記は lead 自走）
 - 完了報告に棚卸し起動条件の判定結果を必ず含める（成立 / 不成立とも数値付き）
@@ -149,7 +160,7 @@ memory 保存は今回限りの指示と長期方針の区別が lead にしか�
 ## 棚卸し起動条件チェック（責務 5 の後に実行）
 
 5 責務の完了後に以下の計測を実行する。
-棚卸し自体はこの skill では実行しない（棚卸し ＝ 整理は retro ＝ 蓄積と責務が異なり、将来は独立 skill）。
+棚卸し自体はこの skill では実行しない（棚卸し ＝ 整理は retro ＝ 蓄積と責務が異なる）。
 
 ```bash
 bash .claude/skills/lw-retro/tanaoroshi-check.sh 50_feedback/feedback-観察-作業スタイル.md
@@ -157,9 +168,8 @@ bash .claude/skills/lw-retro/tanaoroshi-check.sh 50_feedback/feedback-観察-作
 
 シェルスクリプトを別ファイルに外出ししている理由: SKILL.md の `$ARGUMENTS` 展開がスクリプト内の変数参照を壊すため。
 
-起動条件（いずれか成立で報告）: 前回棚卸し日より後の事例行 10 件以上 / INBOX 5 件以上 / 対策済み再発 1 件以上（当日分は数えない、スクリプトの実装に合わせる）。
+起動条件（いずれか成立で棚卸しを提案）: 前回棚卸し日より後の事例行 10 件以上 / INBOX 5 件以上 / 対策済み再発 1 件以上（当日分は数えない、スクリプトの実装に合わせる）。
 前回棚卸し日行が無い場合は全件カウント（成立側に倒す）+ 行の欠落を報告する。
 
-完了報告に棚卸し起動条件の判定結果を必ず含める（成立 / 不成立とも数値付き: 事例 N 件 / INBOX M 件 / 再発 K 件）。
 条件成立時の報告例: 「棚卸しの起動条件が成立しています（事例 N 件 / INBOX M 件 / 再発 K 件）」。
 やるか・いつやるかは lead に委ねる。

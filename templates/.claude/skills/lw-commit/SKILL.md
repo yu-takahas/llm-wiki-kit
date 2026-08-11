@@ -1,5 +1,6 @@
 ---
 name: lw-commit
+effort: medium
 description: commit という区切りで「issue 最新化の確認 + 1_issues / 2_done + log / index + add + commit」を一括で実行する skill。手動 /lw-commit のみ起動。
 argument-hint: "[補足メモ（省略可）]"
 allowed-tools:
@@ -25,12 +26,11 @@ commit という lead 発火の区切りに、issue の最新化確認 + 記録 
 ## Process 概観
 
 ```text
-1. issue 最新化 → 2. log / index を追記して git add → 3. commit（permit gate）
+1. issue 最新化 → 2. log / index を追記して git add → 3. commit（permit gate） → 完了報告
 ```
 
 観察の反映（page / memory への書き込み）は `/lw-retro` が持つ。本 skill は畳む（活用）に専念する。
-ステップ 1 は該当なしが普通（軽い commit では issue が動いていないことが多い）。
-該当なければ skip + 一言報告して次へ進む（暗黙完了しない）。
+ステップ 1 は一巡した結果、該当が無ければ次へ進む。
 
 ## 言い訳対戦表（起動前チェック）
 
@@ -43,8 +43,7 @@ commit という lead 発火の区切りに、issue の最新化確認 + 記録 
 
 ## 事前条件
 
-- `.claude/CLAUDE.md`（Git 節 / ターン終了前セルフチェック）が auto load されている前提。未ロードなら読んでから続行
-- `git status` で commit 対象を確認（対象なし時の停止文言はエラーハンドリング参照）
+- `.claude/CLAUDE.md`「Git」セクションと「ターン終了前セルフチェック」セクションを Read する（ロード済みなら追加コストは無い）
 
 ## Process（3 ステップ）
 
@@ -56,26 +55,25 @@ commit 前に issue が最新化されているか確認する。
 
 手順:
 
-1. `find 00_issues/ -maxdepth 1 -name "*.md"` で WIP issue を列挙し、worktree 名と会話文脈で今セッションの対象を絞る
+1. `find 00_issues/ -maxdepth 1 -name "*.md"` で WIP issue を列挙し、worktree 名と会話文脈で今セッションの対象を絞る。絞り込みに迷ったら `grep -rl "<作業対象の語>" 00_issues/` で候補を機械的に引く（`$ARGUMENTS` に commit 範囲のヒントがあればその語を使う）
 2. 関連 issue の 💧 進行中 / 🌂 中断点が今セッションの作業を反映しているか目視確認
 3. 未反映なら分岐する
    - 今セッションで `/lw-update-issue` が起動済みで手順が context にある → その手順に従って自分で issue を更新する。🪣 に触る前に `LANG=ja_JP.UTF-8 date` を叩き、見出しの日時を実測で書く
    - 手順が context に無い → lead に `/lw-update-issue` の起動を依頼して止まる（手順を推測で補わない）
-4. 本セッションで issue の状態が既に動いていれば `1_issues.md` / `2_done.md` に転記する
+4. lead 確認済みで状態が確定しているものは `1_issues.md` / `2_done.md` に転記する
    - TODO を全 `[x]` にした（全完了）→ `1_issues.md` の対応行も `[x]` に
    - FIXED 化した → `1_issues.md` から該当行を削除 + `2_done.md` FIXED セクションに追記
    - FADED 化した → `1_issues.md` から該当行を削除 + `2_done.md` FADED セクションに追記
 
-issue が既に最新化済み（このセッションで `/lw-update-issue` が実行済み）なら「issue 最新化: 済み」と報告して次へ。
-関連 issue が無ければ「issue 最新化: 該当なし」と報告して次へ。
+issue が既に最新化済み（このセッションで `/lw-update-issue` が実行済み）か、関連 issue が無ければ次へ進む。
 
-FIXED / FADED 化は要否を判断して lead に確認するところまで。`00_issues/.90_fixed/` への mv は本 skill では行わない（`.claude/rules/issue.md`「ユーザー確認」）。
+本セッションで新たに FIXED / FADED 化の要否が出た場合は、判断して lead に確認するところまで。`00_issues/.90_fixed/` への mv は本 skill では行わない（`.claude/rules/issue.md`「ユーザー確認」セクション）。
 
 ### 2. log / index を追記して git add
 
 このコミットに含む Edit / Write / mv / rm を `log.md` に 1 行追記する（append-only、過去エントリは触らない）。
 `30_wiki/` / `40_project/` の page 増減 / rename があれば `index.md` も更新する。
-記入の具体は `.claude/CLAUDE.md` のターン終了前セルフチェックと `.claude/rules/log-index.md` が正本。
+記入の具体は `.claude/rules/log-index.md` が正本。確認のタイミングは `.claude/CLAUDE.md`「ターン終了前セルフチェック」セクションに従う。
 
 そのうえで `git status` で対象を確認し、関連ファイルを明示列挙して `git add` する。
 `git add -A` / `git add .` は使わない（無関係な未追跡ファイルを巻き込まないため）。
@@ -101,14 +99,16 @@ message の確定ルール:
   - 主旨が判然とせず複数にまたがる時のみ、変更数が最多の project
 - `Co-Authored-By:` trailer は message に書かない（方針として付けない。根拠は設計書「trailer を付けない」セクション）
 
+commit 後、3 ステップの結果を 1 行にまとめて完了報告を 1 回出す（例: 「issue 最新化: 済み / log・index: 追記 / commit: `<hash>` `<message>`」）。
+
 ## エラーハンドリング
 
-| ケース                                | 方針                                                                                            |
-| ------------------------------------- | ----------------------------------------------------------------------------------------------- |
-| `git add` 対象なし                    | 「commit 対象がありません」と報告して停止（空 commit しない）                                   |
-| issue が未反映で手順も無い            | lead に `/lw-update-issue` の起動を依頼して止まる（手順を推測で補わない）                       |
-| markdownlint エラー（commit 時 hook） | hook が commit を止める。エラー箇所を提示 → 修正 → 再 add → 再 commit（permit は 2 回目が走る） |
-| commit message の project 不明        | 主旨優先で決める、判然としなければ変更数最多の project                                          |
+| ケース                                | 方針                                                                                                                                                                        |
+| ------------------------------------- | --------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| commit 対象なし                       | 「commit 対象がありません」と報告して停止（空 commit しない）                                                                                                               |
+| issue が未反映で手順も無い            | lead に `/lw-update-issue` の起動を依頼して止まる（手順を推測で補わない）                                                                                                   |
+| markdownlint エラー（commit 時 hook） | hook が commit を止める。対象が「必須動作」の allowlist 内なら修正 → 再 add → 再 commit（permit は 2 回目が走る）。page 等 allowlist 外ならエラー箇所を提示して lead に渡す |
+| commit message の project 不明        | 主旨優先で決める、判然としなければ変更数最多の project                                                                                                                      |
 
 リトライ / 自動回復は持たない（lead 投げで十分）。
 
@@ -121,7 +121,7 @@ message の確定ルール:
 
 ## 必須動作
 
-- ステップ 1 は該当がなくても「該当なし」を一言報告（暗黙完了しない）
+- 完了報告を 1 回出す（個別ステップの「該当なし」報告は出さない）
 - add（2）と commit（3）は別ステップ（permit gate 維持）
 - trailer は手書きしない（方針として付けない）
 - `/lw-commit` が触ってよいのは issue（手順が context にある場合のみ）/ `1_issues.md` / `2_done.md` / `log.md` / `index.md` まで（commit フローに閉じる。page / memory への反映は `/lw-retro` の責務）

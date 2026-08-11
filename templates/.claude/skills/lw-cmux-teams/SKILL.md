@@ -1,5 +1,6 @@
 ---
 name: lw-cmux-teams
+effort: medium
 description: Spawns and manages Agent Teams teammates via cmux. Use when setting up parallel teammates for review, research, or implementation.
 disable-model-invocation: true
 allowed-tools:

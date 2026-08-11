@@ -1,5 +1,6 @@
 ---
 name: lw-create-issue
+effort: medium
 description: issue を起票する（内容解釈 → 名前・骨子の自動生成 → ファイル生成 / 1_issues.md 登録 / log.md 追記の 3 点セット反映）。lead が明示的に /lw-create-issue を呼んだ時のみ起動。
 argument-hint: "<まとめる指示 / 貼り付けテキスト> [wip|icebox]"
 allowed-tools: [Read, Edit, Write, Glob]

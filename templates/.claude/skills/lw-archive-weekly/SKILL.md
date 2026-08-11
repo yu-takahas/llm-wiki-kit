@@ -1,5 +1,6 @@
 ---
 name: lw-archive-weekly
+effort: low
 description: Sprint review — archive completed/fixed/faded tasks from 2_done.md, 1_issues.md, 0_icebox.md to weekly archive (90_reports/weekly/YYYY/MMDD-MMDD.md) and reset the board.
 disable-model-invocation: true
 allowed-tools: Read, Edit, Write

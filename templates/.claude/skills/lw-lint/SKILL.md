@@ -1,5 +1,6 @@
 ---
 name: lw-lint
+effort: low
 description: >
   Audits the llm-wiki for health issues — broken links, missing frontmatter,
   orphan pages, stale claims, and naming violations. Writes a report to /tmp/.
