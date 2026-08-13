@@ -5,7 +5,7 @@ sources:
   - conversation
   - "[[Claude-Code-Review-Plugin]]"
 created: 2026-05-06
-updated: 2026-07-25
+updated: 2026-08-13
 ---
 
 # llm-wiki-kit の lw-code-review skill 設計
@@ -43,7 +43,7 @@ project-local(`.claude/skills/` 配下)。
 
 ## 許可ツール
 
-Read / Write + scoped Bash(`git *` / `date *` / `mkdir *`) + `Skill(code-review *)`。
+Read / Write + scoped Bash(`git branch:*` / `git symbolic-ref:*` / `date:*` / `mkdir:*`) + `Skill(code-review *)`。
 最小権限に絞っている。
 具体的なリストと用途は SKILL.md を参照。
 
@@ -125,35 +125,32 @@ CLAUDE.md 昇格なら追加機構ゼロでループが閉じる。
 
 ## fix-review との接続
 
-verdict → 重要度の対応付けは fix-review 側の SKILL.md が正本。
+重要度は起動時の定型文で 4 段（必須 / 推奨 / 任意 / 確認）を要求し、fix-review のルーティング入力にそのまま渡す。
+判定基準の文面と、要求する出力フォーマットは SKILL.md が正本。
+
+`ReportFindings` は fork された agent に渡らないため、指摘は inline のテキストで返る。
+構造化ツールのスキーマに依存せず、フォーマットの指示だけで契約を保つ設計になっている。
 
 ## 設計決定
 
-### ラッパー方式は成立しない（2026-07-26 の実運用で判明）
-
-組み込み `/code-review` は `disable-model-invocation: true` なので、Skill ツールから起動できない。
-
-```text
-Skill code-review cannot be used with Skill tool due to disable-model-invocation
-```
-
-本 skill 自身も `disable-model-invocation: true` なので、経路は「lead がコマンドを打つ → モデルが `/code-review` を Skill 起動」しかなく、そこが閉じている。
-「Skill 呼び出しは in-process で走るため findings が context に残り、Write するだけで着地できる」という前提の手前で止まる。
-
-方式は peer 実装（組み込みに依存せず、自前で観点別のレビューエージェントを回す）に切り替える。
-実運用では correctness / 仕様適合の 2 観点で 8 件の findings が出て、保存形式と保存先は実用に足ることを確認できた。
-
-あわせて `lw-fix-review` との contract に穴が 1 つ見つかっている。
-fix-review のルーティングは reviewer が付けた重要度（必須 / 推奨 / 任意 / 確認）を入力にするが、組み込みの `ReportFindings` に該当フィールドがない。
-peer 実装では findings スキーマに重要度を含める。
-
-### 旧: なぜ `/code-review` ラッパーか
+### なぜ `/code-review` ラッパーか
 
 組み込み `/code-review` は 8 角度 finder + verify の多段検証で品質が高い。
 API キー管理も不要。
 ラッパーの役割は結果の永続化と知見蓄積ループへの接続に絞る。
 
-この判断は上記の呼び出し制約により破棄した。
+自前で観点別のエージェントを回す実装（peer 実装）と比較して選んだ。
+同一 commit に両方をかけた実測で、組み込みは 1/4 のコストで同等以上の指摘を出し、peer 実装の finder が誰も出さなかった指摘も 1 件出した。
+観点セットと effort の設計を自前で持たなくてよいぶん、skill の責務も小さくなる。
+
+### なぜ重要度を引数で要求するか
+
+fix-review のルーティングは重要度ラベルを入力にするが、組み込みが自主的に付けるラベルは 3 段（high / medium / low）で、プロンプトが要求したものではないため保証がない。
+起動時の定型文で 4 段を指定すれば、そのとおりに返る。
+同じ定型文で出力フォーマットまで指定することで、保存時の変換も不要になる。
+
+ラベルが欠落した場合に skill 側で推測して補うことはしない。
+欠落のまま保存して報告し、採否は fix-review が lead 相談に回す。
 
 ### なぜ `--fix` を受け付けないか
 
@@ -164,9 +161,12 @@ API キー管理も不要。
 
 ### なぜフォーマット統一をしないか
 
-doc-review の 6 要素（層/位置/引用/指摘/提案/根拠）と code-review の findings（file/line/summary/failure_scenario/category/verdict）は指摘の性質が異なる。
-共通ヘッダ（対象/件数）は揃えるが、指摘本体は各 skill 固有のフィールドをそのまま使う。
-fix-review は入力ファイルのフォーマットを自動判別する（doc-review 形式 / code-review 形式）。
+doc-review の 6 要素（層 / 位置 / 引用 / 指摘 / 提案 / 根拠）と code-review の 4 要素（位置 / 指摘 / 失敗シナリオ / 提案）は指摘の性質が異なる。
+コードの指摘は引用より失敗シナリオが判断材料になり、層を持たない。
+
+揃えるのは重要度ラベルの 4 段と、ヘッダ・見出し・サマリーの畳み方まで。
+重要度は fix-review のルーティング入力なので揃える必要があり、その他は同じ読み方で扱えるようにするため。
+指摘本体のフィールドは各 skill 固有のまま使う。
 
 ## オープン議題
 

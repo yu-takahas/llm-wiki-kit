@@ -3,7 +3,7 @@ type: entity
 tags: [claude-code, plugin, review, code-review]
 sources: []
 created: 2026-07-09
-updated: 2026-07-26
+updated: 2026-08-13
 ---
 
 # Claude Code Review Plugin
@@ -69,7 +69,7 @@ effort level によって角度数・候補数・検証モード・findings 上�
 
 ### effort 間の主な差分
 
-**low → medium**: サブエージェント 0 → 8 角度。検証ステップが追加。
+**low → medium**: サブエージェント 0 → 8 角度。検証ステップが追加。low はテストファイル（`test/` / `spec/` / `__tests__/` / `*.test.*` / `fixtures/` / `testdata/`）を対象から外し、medium 以上は含む。
 **medium → high**: 角度数は同じだが検証が再現率寄り（recall-biased）に変わる。「推測的」「実行時状態に依存」だけでは棄却しない。怪しいものも残す。上限が 8 → 10。
 **high → xhigh/max**: 正確性の角度が 3 → 5、候補数が 6 → 8、掃討フェーズ（新しい finder で漏れ探索）が追加。上限が 10 → 15。
 **xhigh と max**: 同一構成。
@@ -153,23 +153,32 @@ Haiku が以下の 4 条件をチェックし、いずれか 1 つでも真な�
 
 CLAUDE.md の進化がレビュー精度を上げる循環を想定しているが、CLAUDE.md への書き戻しは自動ではなくチームの手動更新が前提。
 
-## 呼び出し制約: 他の skill から起動できない
+## Skill ツールからの起動
 
-`disable-model-invocation: true` が付いているため、Skill ツールからは起動できない。
-ユーザーがコマンドを打つ経路だけが有効で、モデル側からの呼び出しは次のエラーで弾かれる。
+`disable-model-invocation: true` が付いているが、Skill ツールから起動できる。
+fork 実行（別コンテキスト）になり、最終応答テキストが呼び出し元の context に返る。
 
-```text
-Skill code-review cannot be used with Skill tool due to disable-model-invocation
-```
+- 引数は `Review target:` として丸ごと渡る。自然言語で書けるので、別リポジトリの特定 commit も対象にできる
+- fork 先の作業ディレクトリは呼び出し元を引き継ぐ
+- 対象に diff が無ければ「レビュー対象なし」と 1 行で返って終わる
 
-この制約は「`/code-review` を内部で呼ぶラッパー skill」という設計を不成立にする。
-ラッパー自身をユーザーが起動しても、その中でモデルが `/code-review` を呼ぶ段で止まる。
-結果を保存したり後処理を足したい場合の選択肢は 2 つ。
+この性質により、結果を保存したり後処理を足したりするラッパー skill が成立する。
 
-- ユーザーが `/code-review` を打った後に、別の skill で context に残った findings を保存する（コマンド 2 回）
-- 組み込みに依存せず、自前で観点別のレビューエージェントを回す
+## 指摘の返り方
+
+`ReportFindings` は fork された agent に渡らないため、指摘は inline のテキストで返る。
+渡らない理由は effort で異なる。
+
+| effort | `ReportFindings`   | 出力形式                                       | 重要度                         |
+| ------ | ------------------ | ---------------------------------------------- | ------------------------------ |
+| low    | 使用を明示的に禁止 | `path:line — 何が壊れるか` の 1 行 × 最大 4 件 | フィールドとして存在しない     |
+| medium | ツール自体が不在   | 散文                                           | 3 段を自主的に付けることがある |
+
+自主的に付く重要度はプロンプトが要求したものではないので、安定して供給されるとは限らない。
+起動時の引数で段階と判定基準を指定すれば、そのとおりに返る。
+見出しや項目構成といった出力フォーマットも同じ方法で指定でき、実際にレビューした対象範囲を冒頭に書かせることもできる。
 
 ## llm-wiki での利用
 
-lw-code-review のラッパー元として設計されたが、上記の呼び出し制約により peer 実装（自前で観点別エージェントを回す）へ方針変更した。
-findings の保存先は `/tmp/lw-review/<issue-name>/`。
+`/lw-code-review` が本 skill を Skill ツールから起動し、返ってきた指摘を `/tmp/lw-review/<issue-name>/` に保存する。
+起動時の引数で重要度 4 段（必須 / 推奨 / 任意 / 確認）と出力フォーマットを指定し、`/lw-fix-review` のルーティング入力にそのまま渡す。
