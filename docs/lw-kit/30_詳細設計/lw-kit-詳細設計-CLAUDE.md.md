@@ -118,5 +118,6 @@ CLAUDE.md を改訂した後、以下を確認する。
 ## 関連
 
 - [[Claude-Codeのメモリ階層]]: Claude Code 仕様一般・ベストプラクティス
+- [[lw-kit-詳細設計-README]]: README（人間向け）と CLAUDE.md（Claude 向け）の対関係
 - [[lw-kit-詳細設計-issue]]: 進行中タスクの中断点メモ
 - [[lw-kit-詳細設計-rules]]: rules の設計・運用・改訂の起点（wiki.md / issue.md 等の構成はそちらを参照）

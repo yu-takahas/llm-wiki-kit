@@ -39,6 +39,7 @@ kit の更新は現状手動で取り込む。選択的な取り込みを行う 
 ### 詳細設計(`30_詳細設計/`)
 
 - [[lw-kit-詳細設計-CLAUDE.md]] — CLAUDE.md / rules / skills 運用の設計
+- [[lw-kit-詳細設計-README]] — README を書く / 改訂する時の設計指針
 - [[lw-kit-詳細設計-rules]] — rules 設計の起点
 - [[lw-kit-詳細設計-issue]] — issue の概念・状態管理・命名規約
 - [[lw-kit-詳細設計-guide]] — guide（issue の TODO メニュー）の機構設計
