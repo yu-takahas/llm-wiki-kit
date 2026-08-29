@@ -5,14 +5,14 @@ sources:
   - conversation
   - "[[ソフトウェア設計ドキュメント体系]]"
 created: 2026-07-24
-updated: 2026-08-07
+updated: 2026-08-30
 ---
 
 # llm-wiki-kit アーキテクチャ設計
 
 llm-wiki-kit の構造・ワークフロー・設計原則を 1 箇所にまとめたリファレンス。
 開発者・メンテナが「何がどこにあるか」「なぜそうしたか」を確認するための文書。
-ユーザー向けの「これは何 / どう使う」は README が担う。
+ユーザー向けの「どう使う」は README が担う。「これは何か」は README でなく作品紹介サイトが持つ（[[lw-kit-詳細設計-README]]）。
 
 ## 外部関係図
 
@@ -169,7 +169,7 @@ graph LR
 どの単一 skill にも閉じない、skill 群全体で守る原則。
 
 - **why/how 分離**: 「なぜそうしたか」は設計書に、「どう実行するか」は SKILL.md に書く。同じことを 2 箇所に書かない。食い違ったら SKILL.md(挙動の正本)が勝ち、設計書側を直す
-- **下書きのみ提示**: 波及範囲の広い skill(`/lw-render` / `/lw-lint`)は `log.md` / `index.md` を勝手に書き換えず、下書きを提示してユーザーが判断する。起票・更新・commit の 3 skill(`/lw-create-issue` / `/lw-update-issue` / `/lw-commit`)は記録の 3 点セット反映が責務そのものなので自分で追記する
+- **下書きのみ提示**: `/lw-lint` は `log.md` / `index.md` を勝手に書き換えず、下書きを提示してユーザーが判断する。起票・更新・commit の 3 skill(`/lw-create-issue` / `/lw-update-issue` / `/lw-commit`)と `/lw-render` は、記録の反映が責務に含まれるので自分で追記する
 - **探索と活用を分ける**: 振り返り(`/lw-retro`)と commit(`/lw-commit`)は別の skill にする。1 つにまとめると振り返りが雑になる
 - **fresh context**: レビューは会話の文脈を切った状態で行う。文脈を知っている人が採否を判断し、知らない人が独立にチェックする
 - **project-local 統一**: 全 skill はワークスペースの `.claude/skills/` に置く。グローバルにする必要がない

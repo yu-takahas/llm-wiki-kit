@@ -5,7 +5,7 @@ sources:
   - conversation
   - "[[lw-kit-基本設計-ディレクトリ構成]]"
 created: 2026-07-20
-updated: 2026-07-28
+updated: 2026-08-30
 ---
 
 # llm-wiki-kit-setup.sh設計
@@ -15,7 +15,7 @@ updated: 2026-07-28
 
 ## 処理フロー
 
-1. 前提チェック（node / git の存在確認）
+1. 前提チェック（node / git / claude の存在確認）
 2. `wiki_path` を決定する（引数 or 対話）
 3. ディレクトリ構造を作る（`00_issues/` 〜 `90_reports/`）
 4. `templates/` から初期ファイルを cp する
@@ -46,29 +46,15 @@ skill / guide / rules が `$KIT/docs/...` で kit 側の設計書と規範を指
 
 ### Claude Code 起動
 
-`setup.sh` の最後にワークスペースで Claude Code を起動し、チュートリアルへの導線を表示する。
+`setup.sh` の最後に、完了メッセージ・雨のタイトル・チュートリアルへの導線を表示してから Claude Code を起動する。
+文面と表示順は `setup.sh` が持つ。雨のタイトルをシェル側に置く理由は [[lw-kit-基本設計-チュートリアル]]「世界観に雨を使う」。
 
-```
-✅ セットアップ完了！
-
-Claude Code を起動したら、こう話しかけてみてください:
-
-  00_issues/tutorial-01-first-wiki.md を読んで、チュートリアルを始めたい。最初のステップから案内して
-
-Enter を押すと Claude Code が起動します...
-```
-
-`read -r -p` で一時停止し、ユーザーがメッセージを読んでから Enter で Claude Code を起動する。
+`read -r -p` で一時停止し、ユーザーがメッセージを読んでから Enter で起動する。
 `exec claude` が即座にターミナルを乗っ取るため、一時停止がないとメッセージが見えないまま消える。
 
-```bash
-cd <wiki_path>
-read -r -p "Enter を押すと Claude Code が起動します..."
-exec claude
-```
-
-ユーザーは表示された例文を参考に Claude Code に話しかけるだけで始められる。
-チュートリアル issue の TODO の最初の項目で `add-dir` を案内する。
+導線は「Claude にこう話しかけてください」という例文の形にする。
+ユーザーはそれをそのまま打つだけで始められる。
+`add-dir` はチュートリアル issue の TODO の最初の項目で案内するので、ここでは触れない。
 
 ## 前提チェック
 
@@ -76,8 +62,13 @@ exec claude
 
 - `git` コマンドの存在
 - `node` コマンドの存在
+- `claude` コマンドの存在（`--no-launch` の時は確認しない）
 
 エラーメッセージはインストール方法を案内する（例: `node が見つかりません。https://nodejs.org からインストールしてください`）。
+
+`claude` だけ条件付きにするのは、末尾の `exec claude` で使うため。
+生成だけして起動しない `--no-launch` の経路では Claude Code が要らない。
+確認せずに進むと、セットアップが全部終わった最後の 1 行で落ちる。
 
 ## wiki_path の決定
 

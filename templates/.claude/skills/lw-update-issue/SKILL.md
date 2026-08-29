@@ -176,4 +176,4 @@ context に情報があると重複を自力で検出できないので、同じ
 - 書く前に候補ごとに対象 issue を `grep` する（4）。同じファイルの中の重複は自力で気づけない
 - 参照に落としたものは、書いた直後に実在を確認する（4）
 - `/lw-update-issue` は対象 issue 以外のファイルに触らない（更新フローに閉じる）。issue の内容改訂は `log.md` に記録しない（規約は `.claude/rules/log-index.md`）
-- 状態遷移（WIP → FIXED 等）はしない。状態遷移は `/lw-commit` の責務
+- 状態遷移（WIP → FIXED 等）はしない。`.90_fixed/` への mv はユーザーの明示指示で行う（`.claude/rules/issue.md`「ユーザー確認」）

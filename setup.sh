@@ -15,6 +15,9 @@ done
 # --- 前提チェック -------------------------------------------------------
 command -v git >/dev/null 2>&1 || { echo "git が見つかりません。https://git-scm.com からインストールしてください"; exit 1; }
 command -v node >/dev/null 2>&1 || { echo "node が見つかりません。https://nodejs.org からインストールしてください"; exit 1; }
+if [ "$no_launch" = false ]; then
+  command -v claude >/dev/null 2>&1 || { echo "claude が見つかりません。https://claude.com/claude-code からインストールしてください（起動せずに生成だけしたい場合は --no-launch を付けてください）"; exit 1; }
+fi
 
 SCRIPT_DIR="$(cd "$(dirname "$0")" && pwd)"
 
@@ -69,6 +72,19 @@ fi
 
 cd "$wiki_path"
 
+# --- 日付の placeholder を埋める --------------------------------------------
+# frontmatter の created / updated と log.md の init 行に生成日を入れる。
+# `.claude/` 配下は skill / rule が frontmatter の書式を `YYYY-MM-DD` で例示して
+# いるだけなので触らない。
+today="$(date +%Y-%m-%d)"
+find . -name "*.md" -not -path "./.claude/*" -not -path "./node_modules/*" -print0 |
+  while IFS= read -r -d '' file; do
+    sed -E "s/^(created|updated): YYYY-MM-DD\$/\1: $today/" "$file" > "$file.tmp"
+    mv "$file.tmp" "$file"
+  done
+sed "s|^- \[YYYY-MM-DD\] init |- [$today] init |" log.md > log.md.tmp
+mv log.md.tmp log.md
+
 # --- git init -------------------------------------------------------------
 git init
 
@@ -83,15 +99,31 @@ git add -A
 git commit -m "chore: initial commit from llm-wiki-kit"
 
 # --- 完了メッセージ + Claude Code 起動 -----------------------------------
-if [ "$no_launch" = true ]; then
-  echo "✅ セットアップ完了！"
-else
-  echo "✅ セットアップ完了！"
-  echo ""
-  echo "Claude Code を起動したら、こう話しかけてみてください:"
-  echo ""
-  echo "  00_issues/tutorial-01-first-wiki.md を読んで、チュートリアルを始めたい。最初のステップから案内して"
-  echo ""
+echo "✅ セットアップ完了！"
+
+cat <<'RAIN'
+
+────────────────────────────────────────────────────
+
+        .--.
+     .-(    ).
+    (___.__)__)
+      ' ' ' '
+     ' ' ' '
+
+    llm-wiki-kit
+
+    降ってきた情報を raw に溜め、wiki / project に蒸留する。
+
+────────────────────────────────────────────────────
+
+RAIN
+
+if [ "$no_launch" = false ]; then
+  printf '\033[1m💬 Claude Code を起動したら、こう話しかけてください:\033[0m\n\n'
+  printf '  ┌─\n'
+  printf '  │  \033[36m00_issues/tutorial-01-first-wiki.md を読んで、チュートリアルを始めたい。最初のステップから案内して\033[0m\n'
+  printf '  └─\n\n'
   read -r -p "Enter を押すと Claude Code が起動します..."
   exec claude
 fi
