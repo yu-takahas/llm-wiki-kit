@@ -6,25 +6,32 @@
 ![Last commit](https://img.shields.io/github/last-commit/yu-takahas/llm-wiki-kit)
 ![License](https://img.shields.io/github/license/yu-takahas/llm-wiki-kit)
 
-調べたことと決めたことを wiki に貯めて、Claude Code に読み書きさせるためのテンプレート。
+調査した内容と決定した事項を wiki に蓄積し、Claude Code に読み書きさせるためのテンプレートです。
 
-会話で決めたことはコンテキストが切れると消えますが、wiki page に残しておけば次の会話で読み直せます。
-調べたものを資料として保存する、資料を読んで wiki page にする、page 同士を `[[link]]` で繋ぐ、作業を issue で追う。
-こうした手順を skill と rule として持っているので、Claude Code がそのまま実行できます。
+会話で決定した内容はコンテキストが切れると失われますが、wiki page に記録しておけば次の会話で読み直せます。
+調査した資料を保存する、資料を読んで wiki page に変換する、page 同士を `[[link]]` で接続する、作業を issue で追跡する。
+こうした作業の手順を skill、page の書式や置き場の規約を rule として同梱しているので、使う側が毎回やり方を指示せずに済みます。
 
-コードだけでなく、設計書やナレッジ管理を LLM でやりたい場合の出発点として使えます。
+コードだけでなく、設計書やナレッジ管理を LLM で行いたい場合の出発点として利用できます。
 
-## 動かすのに要るもの
+<img src="assets/llm-wiki-kit-demo.gif" alt="clone してから最初のチュートリアルが始まるまで" width="880">
+
+上の録画は、clone して `setup.sh` を実行し、最初のチュートリアルが始まるまでを 20 秒に収めたものです（依存のインストール待ちは省略しています）。
+手順は下の「セットアップ」以降にあります。
+
+## 動作に必要なもの
 
 - git
 - node
 - Claude Code 本体と、そのアカウント
 
-この repo は public なので clone は誰でもできますが、動かすのは Claude Code です。
-そのアカウントと課金は別に要ります。
+clone は誰でも可能ですが、動作させるには Claude Code のアカウントと課金が別途必要です。
 
-`setup.sh` は git と node が無いとその場で止まります。
-Claude Code は、セットアップの最後に起動するところで要ります。
+`setup.sh` は 3 つのいずれかが無いと、ワークスペースを作る前に停止します。
+`--no-launch` を付けて実行した場合だけ、Claude Code の確認を飛ばします。
+
+`setup.sh` は bash で動作します。
+Windows では WSL または Git Bash から実行してください。
 
 ## セットアップ
 
@@ -34,84 +41,113 @@ cd llm-wiki-kit
 ./setup.sh
 ```
 
-デフォルトでは `~/wiki/my-wiki` にワークスペースが作られます。
-別の場所に作りたい場合:
+実行すると作成先を聞かれます。
+Enter だけで `~/wiki/my-wiki` になります。
+引数で直接渡すこともできます:
 
 ```bash
 ./setup.sh ~/path/to/my-wiki
 ```
 
-`setup.sh` がやるのは、テンプレートのコピー、`git init`、依存のインストール、最初の commit までです。
+`setup.sh` が行うのは、テンプレートのコピー、`git init`、依存のインストール、最初の commit までです。
 最後に Claude Code が起動します。
-起動せずに終わらせたい場合は `./setup.sh --no-launch` を使います。
+起動せずに終了する場合は `./setup.sh --no-launch` を使用します。
 
-## 最初にやること
+clone したディレクトリは、生成したワークスペースの skill から参照され続けます。
+削除や移動をする場合は、ワークスペース側の `.claude/CLAUDE.md` にある kit のパスを書き換えてください。
 
-チュートリアルの issue が 4 本入っています。
-Claude Code が起動したら、こう話しかけると始まります。
+## 最初に行うこと
 
-```
+チュートリアルの issue を 4 本収録しています。
+Claude Code が起動したら、次のように話しかけると開始します。
+
+```text
 00_issues/tutorial-01-first-wiki.md を読んで、チュートリアルを始めたい。最初のステップから案内して
 ```
 
-| issue                    | やること                                      |
-| ------------------------ | --------------------------------------------- |
-| `tutorial-01-first-wiki` | テーマを 1 つ調べて、最初の wiki page を作る  |
-| `tutorial-02-review`     | もう 1 本作り、レビューして直すサイクルを回す |
-| `tutorial-03-graduation` | 自分のテーマで一通りを自走する                |
-| `tutorial-04-weekly`     | wiki が溜まってきた頃のメンテナンスをする     |
+| issue                    | 内容                                             |
+| ------------------------ | ------------------------------------------------ |
+| `tutorial-01-first-wiki` | テーマを 1 つ調査し、最初の wiki page を作成する |
+| `tutorial-02-review`     | もう 1 本作成し、レビューと修正のサイクルを回す  |
+| `tutorial-03-graduation` | 自分のテーマで一通りを自走する                   |
+| `tutorial-04-weekly`     | wiki が蓄積した後のメンテナンスを行う            |
 
-Obsidian があると `[[link]]` を GUI で辿れます。
-無くても全部動きます。
+01 から 03 は 1 本が 1 セッションで、01 は 30 分ほどで終わります。
+04 は page が溜まってから開くものなので、続けて実行しても検査するものがありません。
+
+Obsidian があれば `[[link]]` を GUI で辿れます。
+無くてもすべて動作します。
 
 ## ディレクトリ構造
 
-```
+`setup.sh` が `templates/` をコピーして作る、ワークスペース側の構成です。
+
+```text
 00_issues/          進行中タスクのメモ。1 ファイルが 1 つの作業単位
-10_raw/             調べたものを加工せず置く場所
+10_raw/             調査した内容を加工せず保存する場所
 20_library/         本の目次と PDF
-30_wiki/            整理した知識。他の場面でも使い回せるもの
+30_wiki/            整理した知識。他の場面でも再利用できるもの
 40_project/         案件ごとの wiki page
 50_feedback/        Claude の振る舞いについての蓄積
 90_reports/weekly/  週次アーカイブ
 ```
 
-最初に触るのは `00_issues/` と `10_raw/` と `30_wiki/` です。
-`10_raw/` に集めたものを読んで、使い回せる知識は `30_wiki/` へ、その案件でしか使わないものは `40_project/<案件>/` へ振り分けます。
+最初に扱うのは `00_issues/` と `10_raw/` と `30_wiki/` です。
+`10_raw/` に集めた資料を読み、再利用できる知識は `30_wiki/` へ、その案件でしか使用しないものは `40_project/<案件>/` へ振り分けます。
 
-残りは使いたくなった時に見れば足ります。
+`00_issues/` は状態をフォルダ位置で表すので、着手前のものは `00_issues/.10_todo/` に入ります。
+ドットで始まるため `ls` の既定では見えません。
 
-ルートには `index.md`（wiki のカタログ）、`log.md`（操作履歴）、`1_issues.md` / `2_done.md` / `0_icebox.md`（タスクの盤面）が置かれます。
+チュートリアルで案内するのはこの流れと、`50_feedback/` と `90_reports/weekly/` です。
+残りは必要になった時点で参照してください。
+
+ルートで最初に見るのは、wiki のカタログ `index.md` と、タスクの盤面 `1_issues.md` です。
 
 ## skill
 
 `/lw-<name>` で起動します。
 
-| skill                | 何が起きるか                                                                   |
-| -------------------- | ------------------------------------------------------------------------------ |
-| `/lw-research-doc`   | URL かキーワードを渡すと、調べて `10_raw/` に資料を作る                        |
-| `/lw-render`         | `10_raw/` の資料を読んで、`30_wiki/` や `40_project/` に wiki page を作る      |
-| `/lw-create-issue`   | 作業を `00_issues/` の issue として起票する                                    |
-| `/lw-update-issue`   | issue の進行中・中断点・TODO を最新化し、前の状態を経緯に降ろす                |
-| `/lw-commit`         | issue の最新化・盤面・`log.md` / `index.md` の更新をまとめてから commit する   |
-| `/lw-doc-review`     | 文書を層別にレビューして、指摘をファイルに出す（修正はしない）                 |
-| `/lw-fix-review`     | 指摘を反映し、再利用できる知見を `50_feedback/` に貯める                       |
-| `/lw-code-review`    | 組み込みの `/code-review` を包み、指摘を `/lw-fix-review` が読める形で保存する |
-| `/lw-tdd`            | テストシナリオごとに subagent を立てて Red-Green-Refactor を回す               |
-| `/lw-lint`           | broken link・frontmatter 欠落・孤立 page を検査する（wiki は書き換えない）     |
-| `/lw-archive-weekly` | 完了したタスクを `90_reports/weekly/` へ移し、盤面から下ろす                   |
-| `/lw-retro`          | セッションを振り返り、観察と知見を `50_feedback/` に反映する                   |
-| `/lw-cmux-teams`     | cmux 上で teammate を立ち上げ、並列作業や相談をする                            |
+4 つのワークフローに分かれます。
 
-規約は `.claude/rules/` が持ちます。
-対象のファイルを Claude Code が読んだ時に自動でロードされるので、こちらから呼ぶ必要はありません。
+**issue 管理** — すべての作業を issue の開閉で追う
 
-skill も rule もワークスペースの中にコピーされるので、自分の仕事に合わせて書き換えられます。
+- `/lw-create-issue` — 作業を issue として起票する
+- `/lw-update-issue` — 進捗・中断点・TODO を issue に書き込む
+- `/lw-retro` — 気づいたことを `50_feedback/` や wiki に記録する（記録前に確認を求めます）
+- `/lw-commit` — `log.md` と `index.md` を更新して commit する
 
-## もっと知る
+**ナレッジ蓄積** — 外部の情報を調べて wiki にする
+
+- `/lw-research-doc` — URL やキーワードから素材を `10_raw/` に集める
+- `/lw-render` — 素材を読んで `30_wiki/` や `40_project/` の page に書き起こす
+- `/lw-doc-review` — 書いた page をチェックして指摘を出す（修正は行わない）
+- `/lw-fix-review` — 指摘を見て、直すものを反映する
+
+**コード開発** — テストを先に書き、レビューして直す
+
+- `/lw-tdd` — シナリオごとに subagent を立てて Red-Green-Refactor を回す
+- `/lw-code-review` — 書いたコードをチェックして指摘を出す
+- `/lw-fix-review` — ナレッジ蓄積と共通
+
+**ユーティリティ** — 上のどれにも属さない
+
+- `/lw-lint` — wiki のリンク切れや書式の不備を検査する（wiki は変更しない）
+- `/lw-archive-weekly` — 片付いたタスクを `90_reports/weekly/` にまとめる
+- `/lw-cmux-teams` — 相談相手や並列作業のチームメイトを立ち上げる（cmux があれば別ペインに並びます）
+
+チュートリアルで一通り実行するので、使う順序は issue に書かれています。
+
+各 skill の詳細は [`templates/.claude/skills/`](templates/.claude/skills/) の各 `SKILL.md` にあります（セットアップ後はワークスペースの `.claude/skills/<name>/SKILL.md`）。
+
+規約は `.claude/rules/` が保持します。
+対象のファイルを Claude Code が読み込んだ時点で自動的にロードされるため、明示的に呼び出す必要はありません。
+
+skill も rule もワークスペース内にコピーされるため、用途に合わせて書き換えられます。
+
+## 詳しく知る
 
 - [takahas.dev/works/llm-wiki-kit](https://takahas.dev/works/llm-wiki-kit) — これは何か、なぜ作ったか、実際に何を載せているか
-- `docs/lw-kit/lw-kit-アーキテクチャ設計.md` — 構造・ワークフロー・設計原則。他の設計書へはここから辿れます
+- [`docs/lw-kit/lw-kit-アーキテクチャ設計.md`](docs/lw-kit/lw-kit-アーキテクチャ設計.md) — 構造・ワークフロー・設計原則。他の設計書へはここから辿れます
 
 ## ライセンス
 

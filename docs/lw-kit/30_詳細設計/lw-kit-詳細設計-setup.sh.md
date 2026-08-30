@@ -5,7 +5,7 @@ sources:
   - conversation
   - "[[lw-kit-基本設計-ディレクトリ構成]]"
 created: 2026-07-20
-updated: 2026-08-30
+updated: 2026-08-31
 ---
 
 # llm-wiki-kit-setup.sh設計
@@ -13,41 +13,42 @@ updated: 2026-08-30
 ワークスペースを生成するセットアップスクリプト。
 叩いたらすぐ使える状態まで持っていくワンショットセットアップ。
 
-## 処理フロー
+**本ページは決定根拠のみを持つ。**
+処理の並び・分岐・メッセージの文面・デフォルト値は `setup.sh` が正本で、本ページに写さない。
+写すと実物と一緒にずれる。
 
-1. 前提チェック（node / git / claude の存在確認）
-2. `wiki_path` を決定する（引数 or 対話）
-3. ディレクトリ構造を作る（`00_issues/` 〜 `90_reports/`）
-4. `templates/` から初期ファイルを cp する
-5. `.claude/CLAUDE.md` の `__LLM_WIKI_KIT_PATH__` を clone 元の実パスに置換する
-6. `git init`
-7. `npm install`（`templates/` 内の `package.json` に基づいて依存インストール）
-8. `lefthook install`（hook を `.git/hooks/` に張る）
-9. first commit
-10. Claude Code を起動する（`cd <wiki_path> && claude`）
+## bash を要求する
 
-### 処理順の制約
+POSIX sh には落とさない。
+`set -o pipefail` で失敗を握り潰さないこと、`read -r -p` で入力を 1 行にまとめることを優先する。
+どちらも `sh` では実行時に落ちるが、構文チェックは通過するので、`sh` で起動されると途中まで動いて失敗する。
 
-- `git init`（6）は `lefthook install`（8）より前に実行する（`.git/` がないと hook を張れない）
-- `npm install`（7）は `git init`（6）の後（`package.json` を first commit に含めるため）
-- `$KIT` の埋め込み（5）は cp（4）の後、first commit（9）より前（置換後の内容を initial commit に含めるため）
+利用者向けの案内は README が持つ。
 
-### `$KIT` の埋め込み
+## 処理順の制約
 
-配布される `CLAUDE.md` は `$KIT` の定義行に `__LLM_WIKI_KIT_PATH__` を持つ。
-`setup.sh` は自分の位置（`$(cd "$(dirname "$0")" && pwd)`）を clone 元として解決し、この placeholder を実パスに置換する。
+順序を入れ替えられない箇所だけを挙げる。
+処理そのものの並びは `setup.sh` のセクションコメントが持つ。
 
-skill / guide / rules が `$KIT/docs/...` で kit 側の設計書と規範を指しているため、定義がないと参照が解決しない。
-説明的な定義だけを置く案は採らない。Claude が実際に Read できずポインタが実行不能なままになり、Bash 文脈では未定義変数が空展開されて誤ったパスを指すため。
+- `git init` は `lefthook install` より前（`.git/` がないと hook を張れない）
+- `npm install` は `git init` の後（`package.json` を first commit に含めるため）
+- `$KIT` の埋め込みは `templates/` の cp の後、first commit より前（置換後の内容を initial commit に含めるため）
+
+## `$KIT` の埋め込み
+
+配布される `CLAUDE.md` は `$KIT` の定義行に placeholder を持ち、`setup.sh` が clone 元の実パスに置換する。
+
+説明的な定義だけを置く案は採らない。
+Claude が実際に Read できずポインタが実行不能なままになり、Bash 文脈では未定義変数が空展開されて誤ったパスを指すため。
 判断の経緯は [[lw-kit-ガイド設計-skill-guide]]「決定」セクション。
 
 `setup.sh` を経由せず `templates/` を手でコピーした場合は placeholder が残る。
 `__` で囲まれた見た目が未設定を示すので、利用者が書き換えられる。
 
-### Claude Code 起動
+## Claude Code 起動
 
-`setup.sh` の最後に、完了メッセージ・雨のタイトル・チュートリアルへの導線を表示してから Claude Code を起動する。
-文面と表示順は `setup.sh` が持つ。雨のタイトルをシェル側に置く理由は [[lw-kit-基本設計-チュートリアル]]「世界観に雨を使う」。
+文面と表示順は `setup.sh` が持つ。
+雨のタイトルをシェル側に置く理由は [[lw-kit-基本設計-チュートリアル]]「世界観に雨を使う」。
 
 `read -r -p` で一時停止し、ユーザーがメッセージを読んでから Enter で起動する。
 `exec claude` が即座にターミナルを乗っ取るため、一時停止がないとメッセージが見えないまま消える。
@@ -58,41 +59,10 @@ skill / guide / rules が `$KIT/docs/...` で kit 側の設計書と規範を指
 
 ## 前提チェック
 
-スクリプト冒頭で以下を確認し、なければ明確なエラーメッセージを出して終了する。
-
-- `git` コマンドの存在
-- `node` コマンドの存在
-- `claude` コマンドの存在（`--no-launch` の時は確認しない）
-
-エラーメッセージはインストール方法を案内する（例: `node が見つかりません。https://nodejs.org からインストールしてください`）。
-
 `claude` だけ条件付きにするのは、末尾の `exec claude` で使うため。
 生成だけして起動しない `--no-launch` の経路では Claude Code が要らない。
 確認せずに進むと、セットアップが全部終わった最後の 1 行で落ちる。
 
-## wiki_path の決定
-
-引数があればそれを使う。なければ対話で聞く。
-
-```bash
-./setup.sh ~/project/wiki/my-wiki
-```
-
-or
-
-```
-./setup.sh
-wiki の作成先を入力してください [~/wiki/my-wiki]:
-```
-
-未入力 Enter でデフォルト値 `~/wiki/my-wiki` が使われる。
-`~` は展開する。相対パスは絶対パスに解決する。
-
 ## 再実行安全性
-
-`wiki_path` が既に存在する場合:
-
-- `.git/` が存在する → 「既に初期化済みです」と警告して終了
-- `.git/` がない → 「ディレクトリが既に存在します。上書きしますか？」と確認
 
 中断からの再実行は「最初からやり直し」で対応する（冪等性より分かりやすさを優先）。
