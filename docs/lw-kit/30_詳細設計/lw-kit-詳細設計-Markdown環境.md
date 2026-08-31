@@ -5,21 +5,20 @@ sources:
   - conversation
   - 10_raw/20260211_markdown環境整備のアイデア.md
 created: 2026-02-11
-updated: 2026-08-06
+updated: 2026-08-31
 ---
 
 # llm-wiki-kit の Markdown 環境
 
-llm-wiki-kit ワークスペースの Markdown 品質管理ツールの構成と設定判断。
+llm-wiki-kit ワークスペースの Markdown 品質管理ツールの設定判断。
 
-## 現在の構成
+**本ページは決定根拠のみを持つ。**
+ツールの設定値と script の定義は `templates/` 配下の `.markdownlint-cli2.yaml` / `.prettierrc` / `.prettierignore` / `lefthook.yml` / `package.json` が正本で、本ページに写さない。
 
-- パッケージマネージャ: npm
-- lint: `markdownlint-cli2` — `npm run lint:md`（チェック） / `npm run lint:md:fix`（修正）
-- format: `prettier` — `npm run format`（チェック） / `npm run format:fix`（修正）
-- pre-commit hook: `lefthook` — `npm install` 時に `prepare: lefthook install` で自動登録
+## 構成
 
-設定ファイルの実体は `.markdownlint-cli2.yaml` / `.prettierrc` / `.prettierignore` / `lefthook.yml` / `package.json` を参照。
+lint に `markdownlint-cli2`、format に `prettier`、pre-commit hook に `lefthook` を使う。
+hook は `npm install` 時に自動登録される（`package.json` の `prepare`）。
 
 script の命名規約は無印 = チェック（安全）、`:fix` = 修正（危険）。
 フールプルーフのため、修正を伴う script は必ず `:fix` を明示する。
@@ -35,6 +34,9 @@ script の命名規約は無印 = チェック（安全）、`:fix` = 修正（�
 | pnpm              | ❌   | npm に置き換え                                  |
 | bun               | ❌   | npm に置き換え                                  |
 
+パッケージマネージャを npm にしたのは [[lw-kit-要件定義]] の非機能要件による。
+kit は配布物なので、node が入っていれば追加インストールなしで動く状態を優先する。
+
 各ツールの設定判断は以下のセクションに集約する。
 
 ## markdownlint-cli2
@@ -44,10 +46,9 @@ chatai は jsonc だが、llm-wiki-kit では日本語コメントとの相性�
 
 ### ignore の判断
 
-- `github/**`: 外部リポ取り込み（[[claude-obsidian]] / [[karpathy-wiki]] / llm-wiki-gist / [[llmwiki]] / [[wiki-skills]] / claude-code-leak）。
-  参照資料として持ち込んだもので、こちら側で書式を直す筋ではない。
-- `10_raw/**`: gitignore 済みの思考素描領域。
-  lint 対象外が運用方針。
+- `github/**`: 外部リポを丸ごと取り込んで参照する時のための除外。
+  持ち込んだ資料の書式をこちら側で直す筋ではない。
+  配布直後のワークスペースにこのディレクトリは無く、取り込みを始めた時点で効き始める。
 - `node_modules/**`: cli2 のデフォルト除外。
   設定ファイル化のタイミングで明示しておく。
 
@@ -86,14 +87,13 @@ chatai/ui_be_with_me（同じく日本語ナンバリングディレクトリ運
 
 ### 主要オプション
 
-| 選択肢                                       | 根拠                                                                                                                                                                                                           |
-| -------------------------------------------- | -------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| `proseWrap: "preserve"`                      | 「文は `。` ごとに改行」運用が prettier の自動折り返しで破壊されないようにする決定打                                                                                                                           |
-| `printWidth: 120`                            | code block の標準幅、Markdown の自然な行長と整合                                                                                                                                                               |
-| `embeddedLanguageFormatting: off` (md only)  | コードブロック内の TS / JS / YAML 等を勝手に整形しない（コード例の意図を保つ）                                                                                                                                 |
-| `.obsidian/` ignore                          | 必須。Obsidian プラグインの minified js を整形すると 10 万行展開される事故のため                                                                                                                               |
-| `10_raw/` ignore                             | raw 取り込み領域（gitignore 済みの素描・調査資料）なので整形対象外                                                                                                                                             |
-| `--log-level warn` (`format` / `format:fix`) | prettier がデフォルトで吐く全ファイル列挙（repo 全体 280 件超の `(unchanged)` 行）が手動実行時に context window を埋めるのを防ぐ。書き換えたファイルと警告 / エラーは残るので差分確認・lint 把握は損なわれない |
+| 選択肢                                 | 根拠                                                                                                                                                                  |
+| -------------------------------------- | --------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `proseWrap`                            | 「文は `。` ごとに改行」運用が prettier の自動折り返しで破壊されないようにする決定打                                                                                  |
+| `printWidth`                           | code block の標準幅、Markdown の自然な行長と整合                                                                                                                      |
+| `embeddedLanguageFormatting` (md only) | コードブロック内の TS / JS / YAML 等を勝手に整形しない（コード例の意図を保つ）                                                                                        |
+| `.obsidian/` ignore                    | 必須。Obsidian プラグインの minified js を整形すると 10 万行展開される事故のため                                                                                      |
+| `--log-level warn` (script 側)         | prettier がデフォルトで吐く全ファイル列挙が手動実行時に context window を埋めるのを防ぐ。書き換えたファイルと警告 / エラーは残るので差分確認・lint 把握は損なわれない |
 
 ### 運用上の落とし穴
 
@@ -114,14 +114,14 @@ chatai/ui_be_with_me（同じく日本語ナンバリングディレクトリ運
 - push 禁止規約と衝突しない: pre-commit 局所、push hook は使わないので CLAUDE.md の push 禁止と整合
 - 2 ジョブで足りる: chatai の Markdown 用 2 ジョブ構成を流用。nano-code のフル構成（lint / typecheck / test / gitleaks + commitlint）は Markdown 用途にはオーバースペック
 
-### 2 ジョブ
+### format と lint を別ジョブにする
 
-pre-commit のみ、push hook は使わない。
+pre-commit のみで、push hook は使わない。
+ジョブ定義は `lefthook.yml` が正本。
 
-| ジョブ  | 内容                                                         | 失敗時の挙動                                                 |
-| ------- | ------------------------------------------------------------ | ------------------------------------------------------------ |
-| format  | staged の `*.md` に対して `npx prettier --write` + `git add` | エラー時 commit ブロック（通常は自動修正で続行）             |
-| lint:md | staged の `*.md` に対して `npx markdownlint-cli2` チェック   | 違反検出時 commit ブロック、`npm run lint:md:fix` で手動修正 |
+format は自動修正して staged に戻すが、lint は修正せず commit をブロックする。
+format の対象は書式の揺れで、機械的に直しても意味が変わらない。
+lint 違反は構造の問題で、自動修正が意図しない書き換えになりうるので人が直す。
 
 ### hook は project-pin のローカル版を使う
 

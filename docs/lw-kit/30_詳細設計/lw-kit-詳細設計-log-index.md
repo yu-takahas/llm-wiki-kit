@@ -13,7 +13,9 @@ updated: 2026-08-22
 # llm-wiki-kit log の運用
 
 ルート `log.md`（操作履歴）と `index.md`（wiki カタログ）の運用設計。
-記入時の具体（フォーマット / type 一覧 / 更新トリガーの表 / 対象パス表記）は `templates/.claude/rules/log-index.md` が正本で、本書は why と却下代替案を持つ。
+
+**本ページは決定根拠のみを持つ。**
+記入時の具体（フォーマット / type 一覧 / 更新トリガーの表 / 対象パス表記）は `templates/.claude/rules/log-index.md` が正本で、本ページに写さない。
 
 ## 記録の単位
 
@@ -30,7 +32,7 @@ issue の内容改訂は `log.md` に記録しない。
 起票（`checkpoint`）と完了・廃棄（`drop`）は残す。
 「いつ始めていつ閉じたか」は issue 本体にも `1_issues.md` にも時刻付きでは残らず、log だけが持つため。
 
-規則そのものは `.claude/rules/log-index.md` が持つ。
+規則そのものは `templates/.claude/rules/log-index.md` が持つ。
 
 ## 説明カラム
 
@@ -62,11 +64,11 @@ log 側は rule の規定と `CLAUDE.md` のセルフチェック 1 項目、つ
 削減率がエントリの性質で決まるため、単一の閾値が機能しない。
 説明カラムも同じ性質を持つと見ている（説明カラム側で削減率のばらつきは測っていない）。
 
-規則そのものは `.claude/rules/log-index.md` が持つ。
+規則そのものは `templates/.claude/rules/log-index.md` が持つ。
 
 ## rule への配置
 
-記入時に参照する具体（フォーマット / type / トリガー）は `.claude/rules/log-index.md` に置き、`CLAUDE.md` には追記の判断基準とセルフチェックだけを残す。
+記入時に参照する具体（フォーマット / type / トリガー）は `templates/.claude/rules/log-index.md` に置き、`CLAUDE.md` には追記の判断基準とセルフチェックだけを残す。
 
 `CLAUDE.md` は常時ロードで全セッションに課金されるのに対し、type 一覧や更新トリガーの表は `log.md` / `index.md` を実際に編集する時にしか要らない。
 rule の `paths` でその 5 ファイルに絞れば、無関係なセッションでは読み込まれない。
@@ -80,7 +82,7 @@ rule の `paths` でその 5 ファイルに絞れば、無関係なセッショ
 ## index.md の運用
 
 `index.md` は全 page を列挙する MOC。
-記入時の具体（セクション構成 / 列挙形式 / 並び方針 / メタファイルの frontmatter）は `.claude/rules/log-index.md` が持つ。
+記入時の具体（セクション構成 / 列挙形式 / 並び方針 / メタファイルの frontmatter）は `templates/.claude/rules/log-index.md` が持つ。
 
 `30_wiki/` / `40_project/` の page 増減は log.md エントリと対で必ず反映する（漏れると MOC として機能しない）。
 

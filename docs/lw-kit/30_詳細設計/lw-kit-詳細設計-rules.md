@@ -6,7 +6,7 @@ sources:
   - "[[lw-kit-詳細設計-CLAUDE.md]]"
   - "[[Claude-Codeのメモリ階層]]"
 created: 2026-05-25
-updated: 2026-08-06
+updated: 2026-08-31
 ---
 
 # llm-wiki-kit の rules 設計
@@ -15,6 +15,9 @@ updated: 2026-08-06
 rule の新設・改訂・責務の切り分けに迷った時に読む。
 [[lw-kit-詳細設計-CLAUDE.md]] が CLAUDE.md を担うのと対で、本ページは rules を担う。
 Claude Code の rules / memory 一般論は [[Claude-Codeのメモリ階層]]、本ページは llm-wiki-kit 固有の決定。
+
+**本ページは決定根拠のみを持つ。**
+rule の一覧・各 rule の `paths`・各 rule が持つ規約は `templates/.claude/rules/` の実体が正本で、本ページに写さない。
 
 rule の実体は 2 箇所にある。
 kit では `templates/.claude/rules/`、生成されたワークスペースでは `.claude/rules/`。
@@ -40,27 +43,22 @@ rule をどこに書くかは、5 つの置き場の境界で決める。本表�
 rules と CLAUDE.md は規約の対象範囲で分かれる。
 領域（ディレクトリ）に紐づく規約は `paths` で絞れるので rules が持ち、どの領域で作業していても効く規約は絞れないので CLAUDE.md が持つ。
 
-## 現在の rules 構成
+## rules の一覧を設計書が持たない理由
 
-| rule                  | paths                                                                                    | 役割                            |
-| --------------------- | ---------------------------------------------------------------------------------------- | ------------------------------- |
-| `wiki.md`             | `10_raw/**` / `30_wiki/**/*.md` / `40_project/**/*.md` / `50_feedback/**/*.md`           | wiki schema（配置を問わず共通） |
-| `wiki-style.md`       | `30_wiki/**/*.md`                                                                        | `30_wiki/` のスタイル規約       |
-| `project.md`          | `40_project/**/*.md`                                                                     | 案件固有 wiki 規約              |
-| `issue.md`            | `00_issues/**`                                                                           | issue 編集規律                  |
-| `log-index.md`        | ルート 5 ファイル（`log.md` / `index.md` / `0_icebox.md` / `1_issues.md` / `2_done.md`） | log とインデックスの記入規約    |
-| `skeleton-confirm.md` | なし（常時ロード）                                                                       | 着手前のゲート                  |
+rule の一覧と各 rule の `paths` は `templates/.claude/rules/` の実体が持つ。
+設計書に表として写すと、rule を新設・廃止するたびに 2 箇所の更新が要り、片方が漏れる。
 
-`paths` はそのファイルが条件付きロードされる対象ディレクトリの glob、なし（常時ロード）は全作業で読み込まれる。
-
-各 rule が具体的に何を持つかは書かない。
-セクション名を列挙すると rule の改訂に追従できず、片方だけ古くなる（実際に `issue.md` へ 2 セクション足した時、この表が据え置きになった）。
+各 rule が具体的に何を持つかも書かない。
+セクション名を列挙すると rule の改訂に追従できない（実際に `issue.md` へ 2 セクション足した時、本ページの記述が据え置きになった）。
 中身はその rule のリード文が宣言している。
+
+`paths` はそのファイルが条件付きロードされる対象ディレクトリの glob で、`paths` なしの rule は全作業で読み込まれる。
+どちらを使うかの判断は次節。
 
 ## 粒度・分割・paths 設計
 
-- 基本は `paths` 単位で 1 ファイル（wiki は `30_wiki/`、project は `40_project/`、issue は `00_issues/`）
-- 複数ディレクトリ横断の規約は 1 ファイルに集約する（wiki schema は raw / wiki / project にまたがるので `wiki.md` 1 つ）
+- 基本は `paths` 単位で 1 ファイル（1 つのディレクトリに閉じる規約は 1 ファイルにまとめる）
+- 複数ディレクトリ横断の規約は 1 ファイルに集約する（schema のように raw / wiki / project にまたがるものは分割しない）
 - 1 ファイルの主題が肥大したら、独立した判定・規約を別ファイルに切り出す
 
 | ロード方式           | 使いどころ                                                     |
@@ -122,7 +120,7 @@ rule を新設・改訂した後に確認する。
 
 - `paths` は作業ディレクトリと一致しているか（常時ロードが本当に必要なものだけ `paths` なしにしているか）
 - 規約・判定が wiki の設計記録にしか無い状態になっていないか（rules 側に規範文があるか。根拠は設計書に残してよい）
-- rule を新設・廃止したら「現在の rules 構成」表に行を足した / 落としたか（配布物 `templates/.claude/rules/` への反映も含む）
+- rule を新設・廃止したら、配布物 `templates/.claude/rules/` と生成済みワークスペースの両方に反映したか
 - CLAUDE.md に rules の詳細を書き写していないか
 - auto memory にワークスペース固有の規約が紛れていないか
 

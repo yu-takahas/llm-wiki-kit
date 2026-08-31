@@ -4,95 +4,61 @@ tags: [llm-wiki-kit, library, synthesis]
 sources:
   - conversation
 created: 2026-06-01
-updated: 2026-07-28
+updated: 2026-08-31
 ---
 
 # llm-wiki-kit の library 設計
 
 `20_library/` の蔵書管理設計。
-PDF 蔵書の目次 wiki + 目録の構造と運用。
+PDF 蔵書の目次 wiki + 目録という構成にした理由を持つ。
 
-## ディレクトリ構成
+**本ページは決定根拠のみを持つ。**
+`20_library/` の書き方と手順は `templates/.claude/rules/library.md` が正本で、本ページに写さない。
 
-```
-20_library/
-  library.md          目録（全蔵書の一覧、primary tag でカテゴリ分類）
-  <タイトル>.md        各書籍の目次 wiki
-  books/               PDF 置き場（gitignore、リポジトリに入れない）
-    <タイトル>.pdf
-```
+## 目次 wiki を wiki schema の対象外にした理由
 
-`.md` ファイル名と `books/` 内の PDF ファイル名は拡張子を除いて一致させる。
+`20_library/` の目次 wiki は `wiki.md` の 5 fields schema に従わせず、書誌情報の独自 frontmatter を使う。
+共有できるフィールドがほぼ無いため。
+目次 wiki は `type` を持たず（entity / concept / synthesis のどれでもない）、`sources` の代わりに `source` で PDF 実体 1 つを指す。
 
-## 目次 wiki のスキーマ
+`wiki.md` に相乗りさせると、リードが宣言している「`30_wiki/` と `40_project/` に共通するスキーマ」から外れた例外記述が増える。
+規約の置き場は `paths` 単位で分けるのが rules 設計の基本（[[lw-kit-詳細設計-rules]]「粒度・分割・paths 設計」）。
 
-### frontmatter
+## PDF を git に入れない
 
-```yaml
----
-authors: [著者1, 著者2]
-translators: [訳者1]
-supervisor: 監修者
-publisher: 出版社
-pages: ページ数
-source: ファイル名.pdf
-format: 自炊 | 電子書籍
-page_offset: 数値
-tags: [primaryタグ, タグ2, タグ3]
----
-```
+`20_library/books/` を `.gitignore` で除外する。
+除外の理由は [[lw-kit-基本設計-ディレクトリ構成]]「ワークスペース用 `.gitignore` が PDF を除外する理由」が持つ。
 
-- `authors`: 配列（1 人でも配列）
-- `translators`: 翻訳書のみ。日本語オリジナルは省略
-- `supervisor`: 監修者がいる場合のみ
-- `source`: `20_library/books/` 配下の PDF ファイル名（パスは不要）
-- `format`: `自炊`（スキャナ + OCR で自作した PDF）または `電子書籍`
-- `page_offset`: 自炊 PDF の物理ページと本文ページのずれ。`PDF物理ページ = 本文ページ + offset`。head（序盤の本文ページ番号）と tail（末尾の奥付・裏表紙）の両方で検証する
-- `tags`: 先頭が primary tag（目録のカテゴリ分類に使う）
+## ページ番号の併記を任意にした理由
 
-フィールド順: authors → translators → supervisor → publisher → pages → source → format → page_offset → tags
+併記すると PDF ビューアから直接ジャンプできるが、`page_offset` の検証が必要になり 1 冊あたりの取り込みコストが上がる。
+参照頻度の低い本まで必須にすると、蔵書を増やす手が止まる。
 
-### 本文
+併記と `page_offset` をセットにしているのは、offset が無いまま併記すると、どの数字が物理ページか判別できなくなるため。
 
-- `# <書籍タイトル>`
-- 概要 1-2 行（各章の内容が分かる粒度で）
-- ページ番号の読み方ノート: `page_offset` の検証結果を明記
-- 章立て: `## 第N章 タイトル（p.本文/PDF）` 等
-- 節リスト: `- セクション名 ... p.本文/PDF`
-- ページ番号は `p.本文ページ/PDF物理ページ` の併記（PDF ビューアで直接ジャンプできるようにする）
-- サブセクションはインデントで階層化
+### 検証を両端で行う理由
 
-本文に「著者 / 出版社」行や `PDF:` 行は書かない（frontmatter で完結）。
+目次 wiki は章・節ごとにページ番号を持つので、offset が 1 つずれると全エントリが使えなくなる。
+片端だけで測ると、前付けの丁合いが途中で変わる本でずれを見逃す。
 
-## 命名規約
+## 命名規約の根拠
 
-- `.md` ファイル名と PDF ファイル名は一致させる（拡張子のみ異なる）
-- 半角スペース禁止、`-` で置換
-- `_00` 等のサフィックスやサブタイトルは除去し、短い通称に揃える
+ファイル名の文字種（半角スペースと `_` を使わない）は `wiki.md`「文字種規約」と同じ理由による。
+terminal でクォートが必要になることと、prettier の Markdown formatter が単独 `_` を emphasis マーカーとして解釈することを避ける。
 
-## tags 体系
+`.md` と PDF のファイル名を一致させる規約と、サブタイトルを落として短い通称に揃える規約は、決めた理由が記録に残っていない。
+frontmatter `source:` が PDF 名を持つので対応付け自体は一致がなくても解決する（実際に不一致のまま機能している蔵書が 1 冊ある）。
+再検討する場合は、一致させることで何が楽になるかを測るところから始める。
 
-先頭が primary tag、残りは副次タグ。2-4 個。
-primary tag は `library.md` のカテゴリ分類に使う。
-具体的な tag 一覧は各書籍の frontmatter と `library.md` のカテゴリ見出しを参照。
+## 目録のカテゴリを primary tag に対応させる理由
 
-## PDF の扱い
-
-- `20_library/books/` は `.gitignore` に追加済み（PDF はリポジトリに入れない）
-- OCR を通した自炊 PDF は透明テキストレイヤーが埋まっている
-- Claude の Read ツールは画像レイヤーを見るため context を大量消費する
-- `pypdf` でテキスト抽出してテキストとして渡す方が圧倒的に軽い
-- 目録の凡例で `📖 = 電子書籍 / 📄 = 自炊` と区別
-
-## 書籍追加の手順
-
-1. PDF を `20_library/books/<タイトル>.pdf` に配置
-2. Read ツールで PDF の目次ページを読み取り（画像として表示される）
-3. `page_offset` を検証: head（序盤の本文ページ番号が見えるページ）と tail（末尾数ページ）の両方を読んで `PDF物理ページ - 本文ページ` を確認
-4. `20_library/<タイトル>.md` に目次 wiki を作成（frontmatter + `page_offset` + 章・節リスト with `p.本文/PDF` 併記）
-5. [[library]] の該当カテゴリに 1 行追記
+`library.md` のカテゴリ見出しは、各書籍 frontmatter の primary tag と一致させる。
+目録側で独自のカテゴリを切ると、分類が書籍 page と目録の 2 箇所に分かれ、片方だけ変わる。
+primary tag を正本にすると、目録は tag の集約結果として導ける。
 
 ## 関連
 
 - [[library]] — 蔵書目録
+- [[lw-kit-詳細設計-rules]] — rule の設計・運用の起点
+- [[lw-kit-基本設計-ディレクトリ構成]] — `books/` を gitignore する理由
 - 初回整備の作業ログはワークスペース側の issue に残る（kit には含まれない）

@@ -75,7 +75,7 @@ raw ファイル全体を Read する。
 
 定型句には 4 判断項目に加え提示項目（lead 確認材料）も含む。
 raw 外の関連概念（raw に未記載の上位概念や横断知識を entity 化したい場合、例: raw が `LocalBusiness JSON-LD` しか書いていなくても上位の `Schema.org` を提示できる）も提示してよい。
-ただし lead 採否判断 → 採用なら Process 4 で書く前に公式ドキュメント等で内容調査必須（推測のみで本文を書かない）→ 不採用なら本 render スコープ外、次回再提案 OK。
+ただし lead 採否判断 → 採用なら Process 5 で書く前に公式ドキュメント等で内容調査必須（推測のみで本文を書かない）→ 不採用なら本 render スコープ外、次回再提案 OK。
 
 `<...>` のプレースホルダは実際の値で埋めて出すこと。サンプルのまま提示しない。
 
@@ -89,6 +89,7 @@ raw 外の関連概念（raw に未記載の上位概念や横断知識を entit
 - 出力先: `30_wiki/`（汎用）/ `40_project/<案件>/`（案件固有）
 - type: <project | entity | concept | source | synthesis>
 - title: `<title>.md`
+  - source page の title は raw の生表現（「生ログ」「メモ」「対談ログ」等）を使わず、役割名・行為名で命名する（例: 「Gemini対談の生ログ」→「方針ブレスト」）
 - 関連 entity 置き場（新規作成する entity のみ列挙、なければ「該当なし」）:
   - [[<name>]] → `30_wiki/`（横断で使い回せる）
   - [[<name>]] → `40_project/<案件>/`（案件文脈のみ）
@@ -103,6 +104,7 @@ raw 外の関連概念で entity 化候補（採否を lead 判断、なけれ�
 - [[<concept>]]: <一行説明>（raw には未記載、横断知識として有用）
 
 同時生成する synthesis（あれば、なければ「なし」）:
+分解パターン（下記「生成パターン」で判定、3 ファイル分解しないなら「なし」）:
 - [[<title>]] — <llm-wiki 内応用の方向性>
 
 既存 wiki / project との矛盾候補:
@@ -142,14 +144,12 @@ raw を言い換えるだけの page を作らない。type が source / synthes
 
 ### 5. 関連 entity / concept / synthesis を生成 or update
 
-step 4 で書いた page から張られる `[[link]]` の先を順に処理する。
+Process 4 で書いた page から張られる `[[link]]` の先を順に処理する。
 既存 page があるものは Edit で in-place merge、なければ Write で新規作成（type=entity か concept、5 fields frontmatter）。
 
-新規 entity / concept の出力先は **Step 3 議論結果を再判断せず適用**する（per-entity で `30_wiki/` か `40_project/<案件>/` を決定済み）。
+新規 entity / concept の出力先は **Process 3 議論結果を再判断せず適用**する（per-entity で `30_wiki/` か `40_project/<案件>/` を決定済み）。
 
-raw が llm-wiki 内 decision に逆流させる価値ある横断分析を含む場合は、synthesis page も同時生成する（議論ステップで lead と合意済みの場合のみ）。
-synthesis の出力先（汎用 `30_wiki/` / 案件文脈に閉じるなら `40_project/<案件>/`）も Step 3 議論時に確定しておき、ここでは再判断しない。
-synthesis のみ別 render にするか同時生成するかは波及範囲（数値閾値）と相談、目安は合計 10 ページ以内。
+生成パターンと case root を書く順序は下記「生成パターン」で決める。Process 3 の議論時に確定させ、ここでは再判断しない。
 
 ルール:
 
@@ -163,13 +163,14 @@ entity の「<ワークスペース名> での参照」セクションの粒度�
 - 流動情報を書かない（例: `[[acme-corp]] でテストケース 11 件 + 11 件で利用`）
 - 流動 = テストケース数 / version / phase 番号 / 時系列ステータス、案件側変更で wiki 追従が要求される情報
 - 判定: 「半年後に同じ記述で正しいか?」を問う、否なら案件側にだけ書く
-- 詳細は設計書の「entity『<ワークスペース名> での参照』セクションの粒度ガイド」
 
 raw 外の概念を entity 化する場合:
 
 - Process 3 議論ステップで lead 採否判断済みの場合のみ書く
 - 採用判断後、公式ドキュメント等で内容調査必須、推測のみで本文を書かない
 - lead 確認なしに勝手に entity 追加しない（hallucination）
+- 調査の優先順位は raw / lead 直接情報 → 公式ドキュメント / 一次情報 → WebSearch。矛盾したら上位を採る
+- WebSearch を引いたら entity の frontmatter `sources:` に URL を含める（古い情報と分かった時に削除しやすい）
 
 ### 6. 矛盾保持
 
@@ -235,6 +236,22 @@ render 開始時に raw を `[[link]]` 候補として書いた場合は、完�
 12. Write/Edit した page にパス参照（`30_wiki/Foo.md` 等）を混入する（CLAUDE.md「文書規約」の `[[link]]` 規約違反。パスは mv/rename で壊れる）
 
 NEVER do these unless lead explicitly overrides.
+
+## 生成パターン
+
+生成パターンは raw の性質で決める:
+
+- raw 単体素材で完結 → source + entity / concept のみ
+- raw が llm-wiki 内 decision に逆流させる価値ある横断分析を含む → source + entity + synthesis を同時生成（議論ステップで lead と合意済みの場合のみ）
+- 大型 raw（切り口が混在し、使い回しやすさのため分けたい） → 3 ファイルに分解する。A entity（汎用 `30_wiki/`、横断知識）/ B synthesis（`40_project/<案件>/`、戦略・ビジョン。A を根拠として参照）/ C source（`40_project/<案件>/`、A / B に分離した以外を圧縮保持）
+- 波及が数値閾値の上限を超える見込み → synthesis を別 render に分割するか lead に確認
+
+synthesis や分解後の page の出力先も Process 3 議論時に確定しておき、ここでは再判断しない。
+
+案件 render で case root（`40_project/<案件>/<案件>.md`、type=project）を書く順序は既存 raw の構造で決める:
+
+- 明示的な方針 raw がある → 方針 raw → case root → 派生 page
+- 明示的方針なし、対談ログや断片的な raw のみ → 派生 page を順次 render → 最後に case root を書く（俯瞰）
 
 ## 数値閾値
 

@@ -49,7 +49,7 @@ Bash は不要(週次スパン計算は LLM が行い、ファイル操作は Re
 1 sprint = 1 week。
 sprint の成果を `90_reports/weekly/` に退避し、盤面(`2_done.md`)をリセットする。
 issue の `.90_fixed/` 保持(issue tracker 代替)とは別軸で、盤面は毎週リセット。
-具体的なユーザー要件(6 項目)は SKILL.md を参照。
+実行手順は SKILL.md が正本。
 
 ## 設計決定
 
@@ -71,7 +71,7 @@ FIXED セクションを週次クリア対象にした理由: lead が scrum モ
 
 ## エラーハンドリング
 
-具体的なケース表は SKILL.md を参照。
+個別のケースは SKILL.md「エラーハンドリング」セクションが正本。
 
 ## 保守規律
 

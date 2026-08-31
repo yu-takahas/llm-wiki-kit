@@ -10,7 +10,7 @@ sources:
   - "[[Claude-Code-Skillの書き方]]"
   - conversation
 created: 2026-07-01
-updated: 2026-07-26
+updated: 2026-08-31
 ---
 
 # llm-wiki-kit の lint skill 設計
@@ -18,6 +18,9 @@ updated: 2026-07-26
 llm-wiki-kit の `/lw-lint` skill（wiki の健全性チェック）の設計書。
 4 OSS 実装（[[wiki-skills]] / [[karpathy-wiki]] / [[claude-obsidian]] / [[llmwiki]]）の lint 機能を横断調査し、llm-wiki-kit に必要な検出項目と出力形式を決定する。
 SKILL.md 一般論は [[Claude-Code-Skillの書き方]] を参照。
+
+**本ページは決定根拠のみを持つ。**
+検出手順・数値閾値・レポート形式・除外リストは `templates/.claude/skills/lw-lint/SKILL.md` と `scripts/broken-links.sh` が正本で、本ページに写さない。
 
 ## データフロー
 
@@ -99,9 +102,9 @@ Write は `/tmp/` へのレポート出力のみ。
 
 ## 検出項目
 
-8 項目(error 2 / warn 5 / info 1)。
-具体的な検出方法・除外リスト・false positive 対策は SKILL.md と `scripts/broken-links.sh` を参照。
-ここでは各項目の設計判断(なぜこの項目を入れたか / なぜこの severity か)を記録する。
+検出項目は severity で 3 段に分ける。
+error は修正しないと参照が解決しないもの、warn は発見可能性が落ちるもの、info は機械判定できず lead の解釈が要るもの。
+以下は各項目の設計判断(なぜこの項目を入れたか / なぜこの severity か)。
 
 ### error(修正必須)
 
@@ -124,7 +127,7 @@ index = 全 page カタログの運用では「index に載っていない」が
 
 #### 4. stale claims
 
-90 日 / 2 年の閾値は [[wiki-skills]] 準拠。
+閾値は [[wiki-skills]] 準拠。
 
 #### 5. 規約違反の `[[link]]`
 
@@ -146,12 +149,7 @@ orphan でなくても index に載っていない page は発見困難になる
 grep ベースの検出には false positive 3 類型がある(部分文字列一致 / エスケープ済み alias / code 内の言及)。
 結果は機械確定せず、出現箇所の文脈を見て判断する。
 
-## 出力形式
-
-`/tmp/lw-lint-YYYY-MM-DD.md` に出力。
-具体的なフォーマット・セクション構成は SKILL.md を参照。
-
-### 永続化しない理由
+## レポートを `/tmp/` に出して永続化しない理由
 
 - lint レポートは再実行すれば再生成できる情報
 - [[wiki-skills]] / [[claude-obsidian]] は `wiki/pages/` にレポートを永続化するが、レポート自体が orphan page になりやすい
@@ -171,9 +169,9 @@ lint skill 自身はファイルを編集しない（Write は `/tmp/` へのレ
 
 ## Process の設計判断
 
-step 2-3(broken link / frontmatter 検証)は確定的なチェックなので Bash スクリプトで実行する方が速く正確。
-step 4-9(orphan / stale / index 未掲載 / ファイル名規約 / missing cross-references)は grep 結果を LLM が解釈して判断する。
-具体的な 11 ステップの手順・数値閾値・エラーケースは SKILL.md を参照。
+broken link 検出と frontmatter 検証は確定的なチェックなので、Bash スクリプトで実行する方が速く正確。
+orphan / stale claims / index 未掲載 / ファイル名規約 / missing cross-references は grep 結果を LLM が解釈して判断する。
+ステップの並びは SKILL.md が正本。
 
 ## 将来の拡張候補
 
@@ -181,7 +179,7 @@ step 4-9(orphan / stale / index 未掲載 / ファイル名規約 / missing cros
 
 - path 参照の broken 検出: 本文中の code span 内 path 文字列（wiki link ではない）の存在確認。`mv` / `rmdir` 後に解決しなくなった参照の検出に有用だがスコープが広い
 - rename 検出の自動化: `git log --diff-filter=R` で rename を取得し、旧名 link を新名に置換提案。有用だが `git log` が遅い
-- missing concept pages: `[[link]]` が 3 回以上出現するが page なし（閾値 3 回は [[wiki-skills]] 準拠）。llm-wiki-kit では entity 作成判断が lead に属するため初版では省略
+- missing concept pages: 同じ `[[link]]` が一定回数以上出現するが page なし（閾値は [[wiki-skills]] 準拠）。llm-wiki-kit では entity 作成判断が lead に属するため初版では省略
 - empty sections: 見出しの下に内容がない。[[claude-obsidian]] にある検出項目
 - tag 一貫性チェック: [[karpathy-wiki]] の `wiki-lint-tags.py` 参考。llm-wiki-kit では `tags` の体系がまだ固まっていないため保留
 

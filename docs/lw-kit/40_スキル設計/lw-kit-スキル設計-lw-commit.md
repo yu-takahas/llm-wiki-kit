@@ -7,7 +7,7 @@ sources:
   - "[[lw-kit-詳細設計-CLAUDE.md]]"
   - conversation
 created: 2026-05-25
-updated: 2026-08-11
+updated: 2026-08-31
 ---
 
 # llm-wiki-kit の commit skill 設計
@@ -17,8 +17,8 @@ commit という lead 発火の区切りに「issue 最新化の確認 + 記録 
 現状の `commit plz` を 1 語に畳み、issue 最新化の確認 / `1_issues.md` / `2_done.md` / log・index / add / commit までを束ねる。
 観察の掘り起こしと反映の実行（page / memory への書き込み）は探索の所作として [[lw-kit-スキル設計-lw-retro]]（`/lw-retro`）が持つ。
 何を反映すべきかを見つける探索と、畳む活用（commit）を分ける（探索・活用の分離、[[探索・活用ジレンマ]]）。
-本ページは設計判断の why を集約する。
-実行手順の how は SKILL.md を参照。
+**本ページは決定根拠のみを持つ。**
+実行手順・確定文言・エラーケースは `templates/.claude/skills/lw-commit/SKILL.md` が正本で、本ページに写さない。
 
 型は [[lw-kit-スキル設計-lw-fix-review]]（why 集約）+ [[lw-kit-スキル設計-lw-render]]（project-local skill 設計書 + SKILL.md スケルトンの先例）に倣う。
 
@@ -123,7 +123,7 @@ why 列が指す設計書 2 本は規約そのものを持たない。
 
 - 規約の why → SSOT は [[lw-kit-詳細設計-CLAUDE.md]]（CLAUDE.md グローバル / プロジェクト双方を含む）。SKILL.md は参照を向けるだけ。手動 commit でも効く普遍ルールを skill にコピーすると、skill を使わない commit で規約が二重管理になり実態と乖離する
 - 実行時に必要な確定文言 → SKILL.md に転記する。実行時 context として手元に無いと動けないもの:
-  - type 一覧（`feat` / `fix` / `refactor` / `chore` / `docs`）
+  - type 一覧
   - project 決定の判断手順（主旨優先 / 変更数で上書きしない）
 - `Co-Authored-By:` trailer → 転記も手書きもしない。根拠は「trailer を付けない」
 
@@ -151,9 +151,8 @@ SKILL.md 側の対応は「message に手書きしない」。
 
 ## 全 3 ステップの実行順と why
 
-```text
-1. issue 最新化 → 2. log / index を追記して git add → 3. commit（permit gate） → 完了報告
-```
+ステップの並びと文言は SKILL.md が正本。
+以下はその順序にした根拠。
 
 | #   | ステップ                   | 順序の根拠                                                                                                                                                         |
 | --- | -------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------ |
@@ -190,10 +189,8 @@ commit の側から反映を促す仕組みは置かない（促すと、探索�
 
 ## commit 時の検査は lefthook に委ねる
 
-pre-commit hook は 2 ジョブ（`lefthook.yml`、設計判断は [[lw-kit-詳細設計-Markdown環境]]）:
-
-- `format`: staged file を整形し、結果を staged に戻す
-- `lint:md`: staged file を検査し、エラーがあれば commit を停止する
+pre-commit hook のジョブ定義は `lefthook.yml` が正本で、設計判断は [[lw-kit-詳細設計-Markdown環境]] が持つ。
+整形は自動で staged に戻り、lint 違反は commit を止める。
 
 `/lw-commit` はこの検査を先回りして叩かない。
 commit 実行時に hook が走り、それが唯一の検査点になる。

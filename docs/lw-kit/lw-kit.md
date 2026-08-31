@@ -50,7 +50,7 @@ kit の更新は現状手動で取り込む。選択的な取り込みを行う 
 
 ### スキル設計(`40_スキル設計/`)
 
-各 skill の個別設計書（ADR 相当）。正本は各 SKILL.md の description、設計書は why + 却下代替案。
+各 skill の個別設計書（ADR 相当）。設計書と実物の境界は [[lw-kit-アーキテクチャ設計]]「設計書の境界」が規定する。
 
 - [[lw-kit-スキル設計-lw-create-issue]] / [[lw-kit-スキル設計-lw-update-issue]] / [[lw-kit-スキル設計-lw-commit]] / [[lw-kit-スキル設計-lw-retro]] / [[lw-kit-スキル設計-lw-archive-weekly]]
 - [[lw-kit-スキル設計-lw-render]] / [[lw-kit-スキル設計-lw-lint]] / [[lw-kit-スキル設計-lw-research-doc]]
@@ -59,7 +59,7 @@ kit の更新は現状手動で取り込む。選択的な取り込みを行う 
 
 ### ガイド設計(`50_ガイド設計/`)
 
-各 guide（issue の ☔ TODO に流し込むワークフローのメニュー）の設計書。正本は `00_issues/.guide/` の実物、設計書は why + 却下代替案。
+各 guide（issue の ☔ TODO に流し込むワークフローのメニュー）の設計書。
 機構は [[lw-kit-詳細設計-guide]] を参照。
 
 - [[lw-kit-ガイド設計-dev-guide]] — アプリ開発 issue 用（`dev-guide.md`）

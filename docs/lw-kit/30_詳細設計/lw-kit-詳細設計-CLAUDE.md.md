@@ -16,7 +16,8 @@ updated: 2026-08-06
 llm-wiki-kit ワークスペース固有の CLAUDE.md / rules / skills 運用と、その背景にある設計判断。
 [[Claude-Codeのメモリ階層]] が一般論、本ページは llm-wiki-kit での具体決定。
 
-**本ページは決定根拠のみを持つ。** 書式・具体値・列挙は `.claude/CLAUDE.md` と各 rule が正本。
+**本ページは決定根拠のみを持つ。**
+書式・具体値・列挙は `templates/.claude/CLAUDE.md` と `templates/.claude/rules/` の各 rule が正本で、本ページに写さない。
 
 ## 層の使い分け
 
@@ -71,7 +72,7 @@ fresh session の Claude Code は `[[link]]` に初見で出会った時に解�
 
 ## 出力量の規約
 
-応答の量と作業中の報告のペースを `.claude/CLAUDE.md` が規定し、成果物の分量は `.claude/rules/wiki.md` が持つ。
+応答の量と作業中の報告のペースを `templates/.claude/CLAUDE.md` が規定し、成果物の分量は `templates/.claude/rules/wiki.md` が持つ。
 
 kit の規約と skill は「書かないモデル」への対策として書かれてきたため、下限側の防御だけがあって上限側の規定が無かった。
 モデルが自発的に書くようになると、この非対称がそのまま増幅器として働く。

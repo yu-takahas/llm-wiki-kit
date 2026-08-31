@@ -71,7 +71,7 @@ README の見せ方とチュートリアルの導線で拾う。
 
 開発ワークフロー skill を llm-wiki-kit 用(`lw-*` prefix)で提供する。
 全 skill は project-local(`.claude/skills/` 配下)に統一。
-一覧は [[lw-kit-アーキテクチャ設計]] の「主要 skill 一覧」参照。
+各 skill の位置づけは [[lw-kit-アーキテクチャ設計]]「開発ワークフロー」セクションが持つ。
 
 ### 規約一式
 
