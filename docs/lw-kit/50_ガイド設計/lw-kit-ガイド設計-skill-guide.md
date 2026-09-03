@@ -4,14 +4,15 @@ tags: [guide, skill, skill-design, workflow, design]
 sources:
   - conversation
 created: 2026-07-27
-updated: 2026-07-28
+updated: 2026-08-31
 ---
 
 # skill 設計ガイドの設計
 
 `skill-guide.md`（skill 設計 issue 用の guide）固有の設計判断。
 guide という仕組みそのものの設計は [[lw-kit-詳細設計-guide]] が持つ。
-手順・行の具体は実物が正本で、本書はその why を持つ。
+**本ページは skill-guide 固有の決定根拠のみを持つ。**
+手順・行の具体は `templates/00_issues/.guide/skill-guide.md` が正本で、本ページに写さない。
 実物は kit では `templates/00_issues/.guide/skill-guide.md`、配布後のワークスペースでは `00_issues/.guide/skill-guide.md`。
 
 本 guide が生まれた環境では skill 設計の手順が既に定着しており、guide が無くても大半は実行されていた。

@@ -4,14 +4,19 @@ tags: [llm-wiki-kit, requirements]
 sources:
   - conversation
 created: 2026-07-20
-updated: 2026-07-24
+updated: 2026-08-31
 ---
 
 # lw-kit-要件定義
 
 llm-wiki-kit の要件。
 あるべき姿の全量を書く。
-実装状況(完了 / 未実装)は case-root([[lw-kit]])と issue が持つ。
+
+**本ページは要件そのものを持つ。**
+個々の仕組みの手順・具体値・設定値は `docs/lw-kit/` 配下の各設計書と実物が正本で、本ページに写さない。
+方式の選定と却下理由（下記「アーキテクチャ要件」）は本ページが正本。
+実装状況は `templates/` 配下の実物が示し、「設計のみで未実装」という意図は各設計書の冒頭が持つ。
+issue やハブを正本にしないのは、issue が配布物に含まれず、公開された kit の読者から到達しないため。
 
 ## 概要
 
@@ -19,11 +24,8 @@ LLM Wiki を始めるためのスターターキット(skills / rules / wiki 規
 
 ## ターゲットユーザー
 
-[[lw-kit-要件定義-ペルソナ]] の P1(感度の高い新規ユーザー)を主要ターゲットとする。
-Claude Code を日常的に使い、ナレッジ管理に課題感がある人。
-
-P2(LLM で設計書もやりたいと思い始めた人)はリーチ拡大ターゲット。
-README の見せ方とチュートリアルの導線で拾う。
+主要ターゲットは [[lw-kit-要件定義-ペルソナ]] の P1、リーチ拡大が P2。
+人物像と、それぞれをどう拾うかはペルソナ側が持つ。
 
 ## アーキテクチャ要件
 
@@ -55,14 +57,14 @@ README の見せ方とチュートリアルの導線で拾う。
 
 ### lw-sync
 
-- llm-wiki-kit の更新を検出する(`last_sync` からの diff)
+- llm-wiki-kit の更新を検出する
 - ワークスペース側の対応ファイルに変更を反映する
 - LLM が diff 内容を見て merge 要否を判断する(反映 / スキップを選択)
 - 詳細: [[lw-kit-スキル設計-lw-sync]]
 
 ### チュートリアル issue
 
-- llm-wiki-kit に同梱する 4 本のチュートリアル issue(`00_issues/tutorial-01` 〜 `04`)
+- llm-wiki-kit にチュートリアル issue を同梱する（実物は `templates/00_issues/tutorial-*.md`）
 - issue の仕組みを使いながら全 skill を体験する
 - 初回 30 分で「1 本 wiki を作る」成功体験を提供する
 - 詳細: [[lw-kit-基本設計-チュートリアル]]
@@ -80,22 +82,18 @@ wiki schema / wiki スタイル / project 規約 / issue 規約 / log・index �
 ### knowledge
 
 `docs/knowledge/` に汎用 wiki を同梱する。
-kit を理解するための参考情報群。
-`setup.sh` では cp しない(kit 側に残す)。
-手動 cp で取り込む。
-集合外への `[[link]]` は平文に戻す。
-集合内は温存する。
+kit を理解するための参考情報群で、配布物には含めない。
+利用者が必要な page だけを手動で取り込む。
+取り込み時の `[[link]]` の扱いは [[lw-kit-基本設計-ディレクトリ構成]]「`docs/knowledge/` を取り込む時」を参照。
 
 ### Template Repository 化
 
-「Use this template」で新 repo を得る導線。
-詳細はワークスペース側のリリース issue が持つ。
+「Use this template」で新 repo を得る導線を用意する。
 
 ### README
 
-セットアップ手順 / ディレクトリ構造 / skill 概要。
-世界観の設計はワークスペース側の README 設計を参照。
-詳細はワークスペース側のリリース issue が持つ。
+セットアップ手順 / ディレクトリ構造 / skill 概要を持たせる。
+書き方の指針は [[lw-kit-詳細設計-README]] を参照。
 
 ## 非機能要件
 

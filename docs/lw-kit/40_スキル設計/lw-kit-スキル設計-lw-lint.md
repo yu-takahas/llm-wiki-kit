@@ -24,6 +24,8 @@ SKILL.md 一般論は [[Claude-Code-Skillの書き方]] を参照。
 
 ## データフロー
 
+図は入出力の要約。実際の読み書き対象は `templates/.claude/skills/lw-lint/SKILL.md` が正本。
+
 ```mermaid
 graph LR
     wiki[("30_wiki/<br/>40_project/")] -->|"走査"| skill(["/lw-lint"])

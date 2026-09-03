@@ -6,7 +6,7 @@ sources:
   - "[[lw-kit-スキル設計-lw-commit]]"
   - "[[lw-kit-詳細設計-issue]]"
 created: 2026-07-03
-updated: 2026-07-26
+updated: 2026-08-31
 ---
 
 # llm-wiki-kit の lw-create-issue skill 設計
@@ -14,9 +14,12 @@ updated: 2026-07-26
 `/lw-create-issue` skill の設計書。
 手作業では「ファイルは作るが `1_issues.md` / `log.md` への登録を忘れる」非対称が起きる。
 これを起票 3 点セット（ファイル生成 + 盤面登録 + `log.md` 追記）で塞ぐ。
-本ページは設計判断の why を集約する。実行手順の how は SKILL.md を参照。
+**本ページは決定根拠のみを持つ。**
+手順・エラーハンドリング表・よくあるミスは `templates/.claude/skills/lw-create-issue/SKILL.md` が正本で、本ページに写さない。
 
 ## データフロー
+
+図は入出力の要約。実際の読み書き対象は `templates/.claude/skills/lw-create-issue/SKILL.md` が正本。
 
 ```mermaid
 graph LR
@@ -106,13 +109,13 @@ Bash を使わない理由: `Glob` 1 つで `00_issues/**/*.md`(全状態のサ�
 
 lead は名前を提案しない(「勝手に付けて、変だったら直す」運用)。
 Claude が内容から自動生成し、骨子提示時にまとめて確認を受ける。
-命名規約の SSOT は [[lw-kit-詳細設計-issue]]「ファイル名規約」セクション。
+命名の決め方と確認手順は `templates/.claude/rules/issue.md`「作成」が正本。4 要素に割った理由は [[lw-kit-詳細設計-issue]]「ファイル名規約」が持つ。
 具体的な生成ロジック・カテゴリ推定・骨子テンプレート・エラーケースは SKILL.md を参照。
 
 ## 保守規律
 
 - 本設計書と SKILL.md の同期: SKILL.md を変更したら本設計書の `updated:` も揃える
-- 命名規則変更時の追従: [[lw-kit-詳細設計-issue]]「ファイル名規約」が変わったら SKILL.md の命名生成ステップを追従
+- 命名規則変更時の追従: `templates/.claude/rules/issue.md`「作成」が変わったら SKILL.md の命名生成ステップを追従
 - カテゴリ変更時の追従: [[lw-kit-詳細設計-issue]]「カテゴリ」が変わったら骨子確認ステップのカテゴリ推定表を追従
 - `1_issues.md` 構造変更時の追従: WIP セクションのカテゴリ並びが変わったら SKILL.md の登録ステップを追従
 

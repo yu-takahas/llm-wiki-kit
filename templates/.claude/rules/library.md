@@ -23,7 +23,7 @@ publisher: 出版社
 pages: ページ数
 source: ファイル名.pdf
 format: 自炊 | 電子書籍
-page_offset: 数値
+page_offset: 数値 | 章ごとに変動（下記テーブル参照）
 tags: [primaryタグ, タグ2, タグ3]
 ---
 ```

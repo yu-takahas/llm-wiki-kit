@@ -4,15 +4,18 @@ tags: [llm-wiki-kit, lw-archive-weekly, skill-design, タスク管理, 週次ア
 sources:
   - conversation
 created: 2026-02-15
-updated: 2026-07-26
+updated: 2026-08-31
 ---
 
 # llm-wiki-kit の lw-archive-weekly skill 設計
 
 sprint review として、完了・確定・廃棄タスクを週次アーカイブに退避し盤面をリセットする `/lw-archive-weekly` の設計。
-実装の手順は SKILL.md を参照。
+**本ページは決定根拠のみを持つ。**
+実行手順・DONE / FADED の判定・エラーハンドリング表は `templates/.claude/skills/lw-archive-weekly/SKILL.md` が正本で、本ページに写さない。
 
 ## データフロー
+
+図は入出力の要約。実際の読み書き対象は `templates/.claude/skills/lw-archive-weekly/SKILL.md` が正本。
 
 ```mermaid
 graph LR

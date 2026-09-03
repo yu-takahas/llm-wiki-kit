@@ -4,14 +4,19 @@ tags: [llm-wiki-kit, lw-research-doc, skill-design, Web調査, synthesis]
 sources:
   - conversation
 created: 2026-03-23
-updated: 2026-07-25
+updated: 2026-08-31
 ---
 
 # llm-wiki-kit の lw-research-doc skill 設計
 
 Web上の情報を調査してマークダウンドキュメントを生成する `/lw-research-doc` スキルの設計。
 
+**本ページは決定根拠のみを持つ。**
+入力判定・実行フロー・保存ルール・ドキュメント構成・エラーハンドリングは `templates/.claude/skills/lw-research-doc/SKILL.md` が正本で、本ページに写さない。
+
 ## データフロー
+
+保存先の正本は SKILL.md「保存ルール」。下図は既定の経路。
 
 ```mermaid
 graph LR
@@ -35,29 +40,23 @@ graph LR
 Web 調査は lead が意図的に起動する操作。
 外部 API(WebFetch / WebSearch)を呼ぶため自動起動は不適切。
 
-## 許可ツール
+## 許可ツールの最小化
 
-WebFetch / WebSearch / Write / Read の 4 つ。
-Bash は不要(ファイル操作は Write / Read で完結)。
-具体的な用途は SKILL.md を参照。
+許可ツールの列挙は SKILL.md の `allowed-tools` が正本。
+Bash を入れていないのは、外部 API を呼ぶ skill に汎用 Bash を持たせると、調査の副作用でファイル操作まで許すことになるため。
 
-## 要件
+## 入力の種類をユーザーに意識させない
 
-**概要**: URL またはキーワードを受け取り、Web上の情報を調査してマークダウンファイルを生成する。
+URL とキーワードで処理は分かれるが、起動時にどちらかを宣言させない。
+調べたいものが URL の形をしているかどうかは、調べる側の関心事ではない。
+判定は skill 側で機械的に行う（判定方法は SKILL.md「入力判定」）。
 
-**ユーザー要件**:
+## ソースの信頼性で順位を付ける理由
 
-1. URL入力: WebFetch で直接読み込んでまとめる
-2. キーワード入力: WebSearch で検索 → 上位ページを WebFetch → まとめる
-3. 入力判定: ユーザーが意識しなくていい（`http` で始まるかどうかで自動判断）
-4. frontmatter 自動付与: プロジェクト標準テンプレートを付与
-5. デフォルト保存先: `10_raw/`
+どのソース種別を優先するかは SKILL.md の「実行フロー」が正本。
 
-## 設計決定
-
-入力判定をユーザーに意識させない方針(`http` で始まるかどうかで自動判断)。
-キーワード検索では信頼性の高いソース(公式ドキュメント・学術論文)を優先する。
-具体的な処理フロー・保存先・ファイル名規則・frontmatter テンプレート・エラーケースは SKILL.md を参照。
+`10_raw/` は後で `/lw-render` が wiki に変換する素材なので、ここで掴んだ情報の質がそのまま wiki まで伝播する。
+調査の時点で順位を付けておかないと、変換の段階では出典の質が見えなくなっている。
 
 ## 保守規律
 

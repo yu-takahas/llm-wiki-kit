@@ -7,16 +7,17 @@ sources:
   - "[[lw-kit-詳細設計-setup.sh]]"
   - "[[プロンプト設計原則]]"
 created: 2026-07-20
-updated: 2026-07-26
+updated: 2026-08-31
 ---
 
 # llm-wiki-kit の lw-sync skill 設計
 
-この skill は未実装（`.claude/skills/` に実体なし）。実装はワークスペース側の issue で予定している。
-
 `/lw-sync` skill の設計書。
 kit の upstream 更新をワークスペースに選択的に取り込む skill。
-本ページは設計判断の why を集約する。
+
+**本ページは設計判断と、実装時に満たす要件を持つ。**
+実物は未実装（`templates/.claude/skills/` に実体なし。実装はワークスペース側の issue で予定）。
+実装後は `templates/.claude/skills/lw-sync/SKILL.md` が手順・具体値の正本になり、その時点で how を本ページから移す。
 
 やらないこと:
 
@@ -26,6 +27,8 @@ kit の upstream 更新をワークスペースに選択的に取り込む skill
 
 ## データフロー
 
+図は入出力の要約。実際の読み書き対象は `templates/.claude/skills/lw-sync/SKILL.md` が正本。
+
 ```mermaid
 graph LR
     kit[("llm-wiki-kit<br/>templates/")] -->|"差分取得"| skill(["/lw-sync"])
@@ -33,13 +36,9 @@ graph LR
     skill -->|"選択的マージ"| workspace
 ```
 
-## skill 名
+## skill 名 / 配置
 
-(未記入)
-
-## skill 配置
-
-(未記入)
+`lw-` prefix と project-local 配置は [[lw-kit-アーキテクチャ設計]]「横断設計原則」が規定する。
 
 ## 呼び出し制御
 
@@ -51,7 +50,7 @@ graph LR
 
 ## 処理フロー
 
-1. `git fetch origin` で kit の最新を取得する
+1. sync 地点を特定する（機構は下記「sync 状態の管理」）
 2. `git merge-base HEAD origin/main` で前回の sync 地点を特定する
 3. sync 地点と `origin/main` の間の diff を取得する
 4. diff のうち `templates/` 配下の変更を抽出する
@@ -87,13 +86,16 @@ graph LR
 ## sync 状態の管理
 
 外部ファイルに記録しない。
-kit は git remote（origin）として登録されており、`git fetch origin` で最新を取得する。
+sync 地点をどう記録するかは未決。
+
+`setup.sh` は `templates/` を cp して `git init` するだけなので、生成されたワークスペースは kit と共通祖先を持たない。
+remote を登録しても `git merge-base` は解決しないため、git の履歴に頼らない記録方式（cp 元の commit hash を残す等）を実装時に決める。
 前回の sync 地点は git の commit 履歴から特定する（`git merge-base` 等）。
 `setup.sh` が作った first commit が初回の sync 地点になる。
 
 ## 代替案
 
-sync の仕組みとして検討した方式と不採用理由（git subtree / submodule / patch / ln -s）は、ワークスペース側の issue で検討済み。
+sync の仕組みとして検討した方式と不採用理由は [[lw-kit-要件定義]]「アーキテクチャ要件」が持つ。
 
 ## kit 側 rename への対応
 

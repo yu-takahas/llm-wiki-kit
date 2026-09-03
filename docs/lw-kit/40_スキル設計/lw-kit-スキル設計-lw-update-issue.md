@@ -7,7 +7,7 @@ sources:
   - "[[lw-kit-スキル設計-lw-commit]]"
   - "[[lw-kit-詳細設計-issue]]"
 created: 2026-07-08
-updated: 2026-08-06
+updated: 2026-08-31
 ---
 
 # llm-wiki-kit の update-issue skill 設計
@@ -16,9 +16,12 @@ updated: 2026-08-06
 進行中 issue の 💧 進行中 / 🌂 中断点 / ☔ TODO を更新し、旧内容を 🪣 経緯に降ろす操作を skill 化する。
 💧/🌂 は上書き方式のため、更新のたびに過去の中断点が消える。
 🪣 経緯セクションで旧内容を蓄積し、更新手順を標準化する skill。
-本ページは設計判断の why を集約する。実行手順の how は SKILL.md を参照。
+**本ページは決定根拠のみを持つ。**
+手順（8 ステップ）・言い訳対戦表・エラーハンドリング表は `templates/.claude/skills/lw-update-issue/SKILL.md` が正本で、本ページに写さない。
 
 ## データフロー
+
+図は入出力の要約。実際の読み書き対象は `templates/.claude/skills/lw-update-issue/SKILL.md` が正本。
 
 ```mermaid
 graph LR

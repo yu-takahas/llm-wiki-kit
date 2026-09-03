@@ -9,7 +9,7 @@ sources:
   - "[[プロンプト設計原則]]"
   - conversation
 created: 2026-05-27
-updated: 2026-08-11
+updated: 2026-08-31
 ---
 
 # llm-wiki-kit の retro skill 設計
@@ -17,12 +17,14 @@ updated: 2026-08-11
 `/lw-retro` skill の設計書。
 `/lw-commit` から「反映＝振り返り」を剥がし、振り返りを探索（exploration）の所作として独立させる skill。
 単なる引っ越しではなく、探索を強制する装置として設計するのが要点。
-本ページは設計判断の why を集約する。
-実行手順の how は SKILL.md を参照。
+**本ページは決定根拠のみを持つ。**
+手順（5 責務）・言い訳対戦表・棚卸し起動条件は `templates/.claude/skills/lw-retro/SKILL.md` と `tanaoroshi-check.sh` が正本で、本ページに写さない。
 
 型は [[lw-kit-スキル設計-lw-commit]]（why 集約、対になる活用側 skill）に倣う。
 
 ## データフロー
+
+図は入出力の要約。実際の読み書き対象は `templates/.claude/skills/lw-retro/SKILL.md` が正本。
 
 ```mermaid
 graph LR

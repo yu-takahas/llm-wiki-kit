@@ -130,3 +130,12 @@ append した時はユーザーに報告する。
   - 対象: 具体物
 - 命名前に `ls 00_issues/` と `find 00_issues/ -name "*.md"` で既存の名前パターンを確認する
 - frontmatter は issue 固有スキーマ（`related` / `source` / `created` / `tags`）
+
+`related` は配列で、要素は次のいずれか。
+
+- `"[[page-title]]"` — issue / wiki page への wikilink。YAML で `[[` は配列開始と衝突するため引用符必須。issue は状態ディレクトリ移動でパスが変わるので、issue 間参照は wikilink にする
+- `<path>` — 非 wiki ファイルへのパス（`.claude/rules/issue.md` / `README.md` / `lefthook.yml` 等、wikilink で解決できないもの）
+- `<directory>/` — ディレクトリ参照（`10_raw/<案件>/` / `90_reports/weekly/` 等、末尾 `/`）
+
+`wiki.md` の `sources` と使い分ける。
+`sources` は出典（raw パス / URL / `conversation`）、`related` は作業上の関連物（他の issue / 設計書 / 設定ファイル）。

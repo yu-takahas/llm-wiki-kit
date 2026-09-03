@@ -5,16 +5,19 @@ sources:
   - conversation
   - "[[Claude-Code-Review-Plugin]]"
 created: 2026-05-06
-updated: 2026-08-13
+updated: 2026-08-31
 ---
 
 # llm-wiki-kit の lw-code-review skill 設計
 
 組み込み `/code-review` のラッパー。
 結果を `/tmp/lw-review/` に保存し、fix-review 経由で知見蓄積ループに乗せる。
-本ページは設計判断の why を集約する。
+**本ページは決定根拠のみを持つ。**
+`Input` / `Steps` / エラーハンドリング / ルールは `templates/.claude/skills/lw-code-review/SKILL.md` が正本で、本ページに写さない。
 
 ## データフロー
+
+図は入出力の要約。実際の読み書き対象は `templates/.claude/skills/lw-code-review/SKILL.md` が正本。
 
 ```mermaid
 graph LR

@@ -24,6 +24,8 @@ commit という lead 発火の区切りに「issue 最新化の確認 + 記録 
 
 ## データフロー
 
+図は入出力の要約。実際の読み書き対象は `templates/.claude/skills/lw-commit/SKILL.md` が正本。
+
 ```mermaid
 graph LR
     skill(["/lw-commit"]) -->|"読み込み + 条件付き更新"| issues[("00_issues/")]

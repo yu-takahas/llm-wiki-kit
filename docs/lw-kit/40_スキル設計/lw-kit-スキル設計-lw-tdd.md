@@ -8,7 +8,7 @@ sources:
   - "superpowers"
   - "[[テスト駆動開発の実践]]"
 created: 2026-07-17
-updated: 2026-08-11
+updated: 2026-08-31
 ---
 
 # llm-wiki-kit の TDD skill 設計
@@ -16,10 +16,13 @@ updated: 2026-08-11
 `/lw-tdd` skill の設計書。
 内側ループ（Red-Green-Refactor）を 1 テストずつ回す手順 skill。
 matlugert-tdd-skill の骨格（71 行、Baseline → サイクル）をベースに、superpowers の Verify RED/GREEN を移植する。
-本設計書は設計判断の why を集約する。
+**本ページは決定根拠のみを持つ。**
+サイクル手順・停止条件・briefing の文面は `templates/.claude/skills/lw-tdd/SKILL.md` と `briefing.md` が正本で、本ページに写さない。
 実行手順の how は `SKILL.md` を参照。
 
 ## データフロー
+
+図は入出力の要約。実際の読み書き対象は `templates/.claude/skills/lw-tdd/SKILL.md` が正本。
 
 ```mermaid
 graph LR

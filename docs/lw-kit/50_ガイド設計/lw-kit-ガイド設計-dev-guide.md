@@ -4,14 +4,15 @@ tags: [guide, 開発, TDD, workflow, design]
 sources:
   - "[[dev-methodology-ワークフロー基本設計]]"
 created: 2026-07-26
-updated: 2026-08-03
+updated: 2026-08-31
 ---
 
 # 開発ガイドの設計
 
 `dev-guide.md`（アプリ開発 issue 用の guide）固有の設計判断。
 guide という仕組みそのものの設計は [[lw-kit-詳細設計-guide]] が持つ。
-手順・行の具体は実物が正本で、本書はその why を持つ。
+**本ページは dev-guide 固有の決定根拠のみを持つ。**
+手順・行の具体は `templates/00_issues/.guide/dev-guide.md` が正本で、本ページに写さない。
 実物は kit では `templates/00_issues/.guide/dev-guide.md`、配布後のワークスペースでは `00_issues/.guide/dev-guide.md`。
 
 dev guide の役目は、[[dev-methodology-ワークフロー基本設計]] が定義した二重ループ構造を issue の ☔ TODO に落とし込むこと。

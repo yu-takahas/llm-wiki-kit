@@ -9,7 +9,6 @@ allowed-tools:
   - SendMessage
   - TaskCreate
   - TaskList
-  - TaskUpdate
 argument-hint: "[task description]"
 ---
 

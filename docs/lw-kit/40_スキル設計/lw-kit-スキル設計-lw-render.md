@@ -9,7 +9,7 @@ sources:
   - "[[lw-kit-詳細設計-issue]]"
   - conversation
 created: 2026-05-16
-updated: 2026-07-26
+updated: 2026-08-31
 ---
 
 # llm-wiki-kit の render skill 設計
@@ -23,6 +23,8 @@ Process の手順・定型句・数値閾値・よくあるミスと言い訳対
 各設計判断の上位原則は [[プロンプト設計原則]] にまとめてあり、本ページの各節では該当する原則への `[[link]]` で根拠を示す。
 
 ## データフロー
+
+図は入出力の要約。実際の読み書き対象は `templates/.claude/skills/lw-render/SKILL.md` が正本。
 
 ```mermaid
 graph LR

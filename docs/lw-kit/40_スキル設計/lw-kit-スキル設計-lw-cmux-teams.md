@@ -5,16 +5,20 @@ sources:
   - conversation
   - 10_raw/20260715_claude-code-agent-teams-cmux調査.md（ワークスペース側の raw）
 created: 2026-04-16
-updated: 2026-08-07
+updated: 2026-08-31
 ---
 
 # llm-wiki-kit の lw-cmux-teams skill 設計
 
-cmux 上で Agent Teams を使うための skill。
-タスク内容を受け取りチーム構成を決定して teammate を spawn・管理する。
-引数なしで呼ぶと fable advisor を 1 人立ち上げて待機する。
+cmux 上で Agent Teams を使う `/lw-cmux-teams` skill の設計。
+
+**本ページは決定根拠と、kit のメンテナ向けの検証・障害対応手順を持つ。**
+チーム構成の決定・spawn の引数・ルール一覧・既知の制約は `templates/.claude/skills/lw-cmux-teams/SKILL.md` が正本で、本ページに写さない。
+検証と障害対応は配布物に含めない kit 側の運用なので、本ページが正本になる。
 
 ## データフロー
+
+フローの正本は SKILL.md「実行フロー」。下図は入口の見取り図。
 
 ```mermaid
 graph LR
@@ -39,11 +43,12 @@ project-local(`.claude/skills/` 配下)。
 spawn のタイミングはユーザーが制御する。
 teammate の起動は副作用が大きく(トークンコスト、ペイン占有)、自動起動は不適切。
 
-## 許可ツール
+## 許可ツールの最小化
 
-Read + Agent + TaskCreate / TaskList / TaskUpdate + SendMessage。
-teammate の spawn と管理に必要なツールに絞っている。
-具体的な用途は SKILL.md を参照。
+許可ツールの列挙は SKILL.md の `allowed-tools` が正本。
+
+teammate の spawn と管理に必要なものだけに絞っている。
+Bash を入れていないのは、teammate が自分でファイルを触る経路を lead 側に持たせないため。
 
 ## 用語
 
@@ -57,13 +62,6 @@ Agent Teams の lead セッションで毎回チーム構成や初期プロン�
 タスク内容を渡すだけで、チーム構成の決定から spawn・結果統合までやってほしい。
 引数なしで呼んだ場合は fable advisor を立ち上げて issue の関連資料を読ませ、いつでも相談できる状態にしたい。
 
-### ユーザー要件
-
-1. `/lw-cmux-teams タスク内容` でチーム構成を決定し、teammate を spawn してくれる
-2. `/lw-cmux-teams`（引数なし）で fable advisor を 1 人立ち上げ、WIP issue + 関連資料を読んで待機する
-3. タスクの性質に応じてチーム構成（人数・役割）を提案してくれる
-4. 全 teammate 完了後に結果を統合して報告してくれる
-
 ### 前提条件
 
 - `cmux claude-teams` で起動済み（内部で `CLAUDE_CODE_EXPERIMENTAL_AGENT_TEAMS=1` + tmux shim + `--teammate-mode auto` が設定される。`--teammate-mode` を手動指定する必要はない）
@@ -75,29 +73,16 @@ Agent Teams の lead セッションで毎回チーム構成や初期プロン�
 
 ## 既知の制約
 
-具体的な制約一覧は SKILL.md を参照。
-設計上の注意点: session resume で in-process teammate は復元されない(再 spawn が必要)。チーム共有ディレクトリはセッション終了時に自動削除される。
+制約一覧は SKILL.md「既知の制約」が正本。
 
-## 実行フロー
+## 実行フローの設計判断
 
-全体像（3 ステップ）: `1. チーム構成決定` → `2. spawn` → `3. 結果統合`
+ステップの並びは SKILL.md が正本。
 
-TeamCreate / TeamDelete は v2.1.178 で廃止。暗黙チーム方式のため setup / cleanup ステップは不要。
+setup / cleanup のステップを持たない理由は下記「TeamCreate / TeamDelete 廃止対応」。
 
-### 1. チーム構成の決定
-
-引数なし → advisor パターン。引数あり → チーム構成パターンから選択。
-
-### 2. teammate の spawn
-
-Agent ツール（foreground）で spawn する。cmux が各 teammate を別ペインに表示する。
-
-具体的な引数・NG パターンは SKILL.md を参照。
-NG の理由: cmux は tmux shim で `split-window` / `send-keys` 等を native API に翻訳しているため、Agent ツール経由でないとペイン連携が壊れる。
-
-### 3. 結果の統合
-
-全 teammate 完了後、結果をまとめて報告する。合意点・相違点がある場合は明示する。
+spawn を Agent ツール経由に限定しているのは、cmux が tmux shim で `split-window` / `send-keys` 等を native API に翻訳しているため。
+手動で tmux を叩くとペイン連携が壊れる。
 
 ## advisor パターン
 
@@ -125,13 +110,13 @@ advisor のモデルに fable を選んだ理由: 考え込まなくても賢い
 - モデル既定 sonnet / advisor は fable: コスト最適化。opus はユーザー明示指示時のみ
 - 引数なし時に lead がタスクを決めない: 2026-05-22 の事故（文脈推測でタスクを勝手作成）の再発防止
 - 二次委譲禁止: 同事故の派生（ユーザーが lead に直接依頼した作業を worker に回した）の再発防止
-- 触らないファイルリスト: 2026-05-22 の事故（worker 4 名が log.md / index.md を勝手更新）の再発防止。fresh-context の teammate は CLAUDE.md のセルフチェックに従って正しく動くが、lead 集約方針と衝突する
+- 触らないファイルリスト: briefing に記載が無いまま worker 4 名が log.md / index.md を更新した事故の再発防止。fresh-context の teammate は CLAUDE.md のセルフチェックに従って正しく動くので、触らせたくないファイルは briefing 側で明示しないと止まらない
 - 一時 subagent の name なし spawn: `name` の有無が teammate（管理対象・SendMessage 宛先）と使い捨て subagent の境界になるため。name 付きで呼ぶと teammate 化する
 - briefing に報告経路を書く: teammate のプレーンテキスト出力は lead に届かず、`SendMessage` を呼ばないと報告にならない。書かないと teammate は報告したつもりで待機し、lead 側には idle 通知だけが届く。idle は報告の不在を意味しないので、この状態は催促でも判別できない
 
 ## 運用 / Troubleshooting
 
-v2.1.178+ の暗黙チーム + 自動 cleanup では、team_name 衝突 / leadSessionId 不整合 / inbox 誤配 / ゴースト累積は発生しない。
+暗黙チーム方式への移行で、team registry を持っていた頃の障害は発生しなくなった。
 
 現行で起こり得る症状:
 
@@ -143,7 +128,7 @@ v2.1.178+ の暗黙チーム + 自動 cleanup では、team_name 衝突 / leadSe
 
 ## 検証
 
-3 ステップフローの smoke test。
+引数なし（advisor パターン）経路の smoke test。
 
 ### 前提
 
@@ -178,7 +163,7 @@ v2.1.178+ の暗黙チーム + 自動 cleanup では、team_name 衝突 / leadSe
 
 v2.1.178 で両ツールが完全廃止。暗黙チーム方式に移行。
 
-影響: team_name の命名規約・存在確認・registry 操作の作法が全て不要になり、フローが 3 ステップに圧縮された。
+影響: team_name の命名規約・存在確認・registry 操作の作法が全て不要になり、setup / cleanup のステップが不要になった。
 
 ## 保守規律
 

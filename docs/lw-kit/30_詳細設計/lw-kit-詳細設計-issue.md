@@ -93,19 +93,11 @@ WIP から ICEBOX へ戻す経路もある（並行数が限界を超えた issu
 ## frontmatter
 
 `source` / `tags` は llm-wiki-kit の他の frontmatter と一貫性を持たせるために含める。
-`related` は issue 固有のフィールド。
+`related` は issue 固有のフィールドで、作業上の関連物（他の issue / 設計書 / 設定ファイル）を指す。
+wiki page の `sources`（出典）と役割が違うので別フィールドにしている。
+要素に何を書けるかは `templates/.claude/rules/issue.md`「作成」が正本。
 `created` は起票日。鮮度チェックや棚卸しで「いつ切った issue か」を判断する材料。
 状態は frontmatter に持たない（フォルダ位置が SSOT）。
-
-### `related` field の中身
-
-配列、要素は次のいずれか:
-
-- `"[[page-title]]"` — issue / wiki page への wikilink（YAML で `[[` は配列開始と衝突するため引用符必須）。issue は状態ディレクトリ移動でパスが変わるため、issue 間参照は wikilink 必須
-- `<path>` — 非 wiki ファイルへのパス（`templates/.claude/rules/issue.md` / `README.md` / `lefthook.yml` 等、wikilink で解決できないもの）
-- `<directory>/` — ディレクトリ参照（`10_raw/project-b/` / `90_reports/weekly/` 等、末尾 `/`）
-
-wiki.md `sources` field と対比: `sources` は出典（raw パス / URL / `conversation`）、`related` は作業上の関連物（他の issue / 設計書 / 設定ファイル）。
 
 ## ファイル内部構造
 
@@ -160,7 +152,8 @@ log は操作の記録で、後から変えると事実が壊れる。
 分け方は見る頻度で、日々開くのは `1_issues.md` だけになる。
 保留と完了を同じファイルに混ぜると、進行中の一覧を見るたびに終わったものを読み飛ばすことになる。
 
-各セクション内は「カテゴリ」セクションの軸でサブ分類する。
+各セクション内はカテゴリでサブ分類する。
+分類の軸は上記「カテゴリ」。実際の見出しは各ワークスペースの実物が持ち、`/lw-create-issue` は無ければ新設する。
 
 ## 閉じた issue を残す理由
 

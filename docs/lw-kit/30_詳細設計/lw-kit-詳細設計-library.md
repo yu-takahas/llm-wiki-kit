@@ -24,10 +24,9 @@ PDF 蔵書の目次 wiki + 目録という構成にした理由を持つ。
 `wiki.md` に相乗りさせると、リードが宣言している「`30_wiki/` と `40_project/` に共通するスキーマ」から外れた例外記述が増える。
 規約の置き場は `paths` 単位で分けるのが rules 設計の基本（[[lw-kit-詳細設計-rules]]「粒度・分割・paths 設計」）。
 
-## PDF を git に入れない
+## PDF を git に入れない理由
 
-`20_library/books/` を `.gitignore` で除外する。
-除外の理由は [[lw-kit-基本設計-ディレクトリ構成]]「ワークスペース用 `.gitignore` が PDF を除外する理由」が持つ。
+[[lw-kit-基本設計-ディレクトリ構成]]「ワークスペース用 `.gitignore` が PDF を除外する理由」が持つ。
 
 ## ページ番号の併記を任意にした理由
 
@@ -52,7 +51,6 @@ frontmatter `source:` が PDF 名を持つので対応付け自体は一致が�
 
 ## 目録のカテゴリを primary tag に対応させる理由
 
-`library.md` のカテゴリ見出しは、各書籍 frontmatter の primary tag と一致させる。
 目録側で独自のカテゴリを切ると、分類が書籍 page と目録の 2 箇所に分かれ、片方だけ変わる。
 primary tag を正本にすると、目録は tag の集約結果として導ける。
 
