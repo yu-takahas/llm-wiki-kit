@@ -1,9 +1,10 @@
 ---
 name: lw-update-issue
-description: "Updates the active issue's progress (💧), checkpoint (🌂), and TODO (☔) sections, archiving previous state to the 🪣 log section. Triggers when the lead asks to update or refresh an issue, or when session work has progressed an issue's status."
-argument-hint: "[issue 名 or パス（省略時は会話文脈から推定）]"
+effort: high
+description: "Updates the active issue's progress (💧), checkpoint (🌂), and TODO (☔) sections, archiving previous state to the 🪣 log section, and closes the issue when explicitly instructed. Triggers when the lead asks to update or refresh an issue, to close it as FIXED or FADED, or when session work has progressed an issue's status."
+argument-hint: "[--fixed|--faded] [issue 名 or パス（省略時は会話文脈から推定）]"
 disable-model-invocation: true
-allowed-tools: [Read, Edit, "Bash(LANG=ja_JP.UTF-8 date:*)", "Bash(grep:*)", "Bash(find:*)"]
+allowed-tools: [Read, Edit, "Bash(LANG=ja_JP.UTF-8 date:*)", "Bash(grep:*)", "Bash(find:*)", "Bash(git mv:*)"]
 ---
 
 # lw-update-issue
@@ -12,13 +13,16 @@ allowed-tools: [Read, Edit, "Bash(LANG=ja_JP.UTF-8 date:*)", "Bash(grep:*)", "Ba
 設計判断の why は `$KIT/docs/lw-kit/40_スキル設計/lw-kit-スキル設計-lw-update-issue.md`、本ファイルは実行手順の how。
 
 入力: `$ARGUMENTS` は対象 issue のファイル名 / `[[link]]` / パス。省略時は会話文脈から推定する。
+`--fixed` / `--faded`（または自然文の「FIXED にして」「閉じて」）があれば状態遷移まで行う。
 
 ## Process 概観
 
 ```text
 1. 対象特定 → 2. Read → 3. 洗い出し（探索）→ 4. 選んで 🪣 に書く（活用）
-  → 5. 💧/🌂 上書き → 6. ☔ TODO チェック → 7. ☔ TODO 追加 → 8. 自己報告
+  → 5. 💧/🌂 上書き → 6. ☔ TODO チェック → 7. ☔ TODO 追加 → 8. 状態遷移 → 9. 自己報告
 ```
+
+ステップ 8 は指示があるときだけ走る。無ければ 9 へ進む。
 
 ## 言い訳対戦表（起動前チェック）
 
@@ -29,12 +33,14 @@ allowed-tools: [Read, Edit, "Bash(LANG=ja_JP.UTF-8 date:*)", "Bash(grep:*)", "Ba
 | 旧 💧/🌂 を要約して短くまとめよう                             | 洗い出し（3）で種類を省かない。量の調整は選別（4）でやる                                       |
 | 🪣 セクションが無いから更新できない                           | 無ければ自動追加する（☔ TODO の後、関連の前に挿入）                                           |
 | 経緯の内容は分かってるから降ろしと上書きをまとめて 1 回でやる | ステップ 3 の `date` 取得を踏まないまま走る。洗い出し（3）→ 書く（4）→ 上書き（5）は別ステップ |
+| TODO が全部 `[x]` になったので閉じておく                      | 指示が無ければ状態遷移しない（8）。全完了と閉じてよいかは別                                    |
+| 閉じるので 🌂 に「次は commit から」と残しておく              | 終端形は再開指示を残さない（`.claude/rules/issue.md`）。commit まで確定しているものとして書く  |
 
 ## 事前条件
 
 - `.claude/rules/issue.md`（4 セクション構造・「🪣 経緯の書き方」）を把握している
 
-## Process（8 ステップ）
+## Process（9 ステップ）
 
 ### 1. 対象 issue の特定
 
@@ -117,6 +123,10 @@ context に情報があると重複を自力で検出できないので、同じ
 今セッションで完了した項目を `[x]` にする。
 変化なしなら skip。
 
+区切りの終端にある `- [ ] /lw-commit` の行は閉じない。
+commit を実行した事実を持つのは `/lw-commit` の側で、そちらが自分で閉じる。
+ステップ 8 で状態遷移まで行う場合はこの限りでない（終端形が `[ ]` を残さないと規定している）。
+
 ### 7. ☔ TODO 追加（探索）
 
 会話中に生まれた新しい作業を探す。
@@ -127,7 +137,27 @@ context に情報があると重複を自力で検出できないので、同じ
 
 該当なしなら「新規 TODO: なし」と報告して skip。
 
-### 8. 自己報告
+### 8. 状態遷移
+
+`$ARGUMENTS` に `--fixed` / `--faded`（または同義の自然文）がある時だけ走る。
+無ければ何もしない。指示が無いのに閉じない。
+
+1. `.claude/rules/issue.md`「FIXED / FADED 化時の終端形」に従って 4 セクションを書き換える。5 から 7 で書いた内容も終端形に合わせ直す
+2. `find 00_issues/ -name "<name>.md"` で対象の現在のパスを取る（タイトルは全体で一意なので 1 件に決まる）
+3. 2 の出力を移動元にして `git mv` する
+   - FIXED → `git mv <2 の出力> 00_issues/.90_fixed/`
+   - FADED → `git mv <2 の出力> 00_issues/.99_faded/`
+
+移動元を `00_issues/<name>.md` と決め打ちしない。
+FADED はどの状態からでも遷移でき、対象が `.10_todo/` / `.00_icebox/` にいることがある。
+
+書き戻し（`.claude/rules/issue.md`「完了 / 廃棄時の規律」）の要否は本 skill が判断しない。
+閉じる指示は仕分け済みの意思表示として受ける（page への反映は `/lw-retro` の責務）。
+
+`1_issues.md` / `2_done.md` への転記はしない（`/lw-commit` の責務）。
+盤面と issue の状態は次の `/lw-commit` まで一時的にずれる。
+
+### 9. 自己報告
 
 選別の内訳と、書いた 🪣 エントリの**行数と 1 行サマリ**を報告する。
 
@@ -150,14 +180,16 @@ context に情報があると重複を自力で検出できないので、同じ
 
 ## エラーハンドリング
 
-| ケース                               | 方針                                                                                 |
-| ------------------------------------ | ------------------------------------------------------------------------------------ |
-| `$ARGUMENTS` なし + 文脈から特定不可 | 「どの issue を更新しますか?」と案内して停止                                         |
-| 候補が複数ある                       | 候補を列挙して lead に選択を促す                                                     |
-| 対象 issue が WIP 以外（TODO 等）    | 更新は実行する（TODO / ICEBOX の issue も 💧/🌂 更新は有効）。ただし状態遷移はしない |
-| 🪣 経緯セクションが未存在            | 4 で自動追加する                                                                     |
-| 💧/🌂 に変化がなく候補も無い         | 4 を skip                                                                            |
-| 候補は挙がったが選別で全部落ちた     | エントリを作らない                                                                   |
+| ケース                                | 方針                                                                                                                                     |
+| ------------------------------------- | ---------------------------------------------------------------------------------------------------------------------------------------- |
+| `$ARGUMENTS` なし + 文脈から特定不可  | 「どの issue を更新しますか?」と案内して停止                                                                                             |
+| 候補が複数ある                        | 候補を列挙して lead に選択を促す                                                                                                         |
+| 対象 issue が WIP 以外（TODO 等）     | 更新は実行する（TODO / ICEBOX の issue も 💧/🌂 更新は有効）。状態遷移は 8 の指示に従う                                                  |
+| 🪣 経緯セクションが未存在             | 4 で自動追加する                                                                                                                         |
+| 💧/🌂 に変化がなく候補も無い          | 4 を skip                                                                                                                                |
+| 候補は挙がったが選別で全部落ちた      | エントリを作らない                                                                                                                       |
+| 状態遷移の指示があるが対象が曖昧      | 1 で停止する。推定で閉じない                                                                                                             |
+| `git mv` が not under version control | 起票直後の issue はまだ追跡されていない。本 skill は `git add` を持たないので、`/lw-commit --fixed` で閉じるよう lead に案内して停止する |
 
 ## よくあるミス
 
@@ -176,4 +208,5 @@ context に情報があると重複を自力で検出できないので、同じ
 - 書く前に候補ごとに対象 issue を `grep` する（4）。同じファイルの中の重複は自力で気づけない
 - 参照に落としたものは、書いた直後に実在を確認する（4）
 - `/lw-update-issue` は対象 issue 以外のファイルに触らない（更新フローに閉じる）。issue の内容改訂は `log.md` に記録しない（規約は `.claude/rules/log-index.md`）
-- 状態遷移（WIP → FIXED 等）はしない。`.90_fixed/` への mv はユーザーの明示指示で行う（`.claude/rules/issue.md`「ユーザー確認」）
+- 状態遷移は指示があるときだけ（8）。自発的に閉じない（`.claude/rules/issue.md`「ユーザー確認」）
+- `1_issues.md` / `2_done.md` への転記はしない。盤面は `/lw-commit` が持つ

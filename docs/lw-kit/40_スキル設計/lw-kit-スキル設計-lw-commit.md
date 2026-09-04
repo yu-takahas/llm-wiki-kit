@@ -7,7 +7,7 @@ sources:
   - "[[lw-kit-詳細設計-CLAUDE.md]]"
   - conversation
 created: 2026-05-25
-updated: 2026-08-31
+updated: 2026-09-04
 ---
 
 # llm-wiki-kit の commit skill 設計
@@ -79,7 +79,7 @@ SKILL.md の `description` は日本語のまま維持する。
 将来 model 自動起動を有効化する場合は英語・三単現に直す。
 
 同じ制御が `/lw-update-issue` と `/lw-retro` にも掛かっている。
-`/lw-commit` から他 skill を呼び出す設計にはできないので、issue の最新化は手順の有無で動きを分ける（「全 3 ステップの実行順と why」参照）。
+`/lw-commit` から他 skill を呼び出す設計にはできないので、issue の最新化は `/lw-update-issue` の SKILL.md を読んで手順を得る（「他 skill の SKILL.md を読む形にした」参照）。
 
 ## 許可ツールの最小化
 
@@ -90,6 +90,20 @@ Write は持たない（page の新規作成は `/lw-retro` の責務で、本 s
 issue の一巡と日時の実測に要るコマンドだけを個別に許可する。
 許可リストの具体値は SKILL.md が正本。
 設計書に写すと、SKILL.md 側で増減したときに気づかず乖離する。
+
+### 狭さの根拠を「最小権限」と「当時の信用の水準」に分ける
+
+初期の allowlist が狭かったのは、最小権限の原則だけが理由ではない。
+当時の運用が生成 AI の出力を今ほど信用しておらず、`accept edits on` で動かして、まずそうなコマンドは毎回ユーザー確認に落としていた。
+その後 Opus 4.7 から 5 の世代で水準が上がり `auto mode on` が常用になったので、この前提は失効している。
+
+2 つを分けて書くのは、片方が時間で失効し、もう片方が失効しないため。
+最小権限は今も効くが、信用の水準に由来する狭さは前提が変われば見直す対象になる。
+書き分けないと、次に見た人が狭さ全体を不変の要件として扱う。
+
+`Bash(git mv:*)` を後から足したのはこの見直しの結果。
+issue の状態遷移はファイル移動なので実行手段が要るが、kit の skill は 1 つも mv を持っておらず、状態遷移に引き受け手がいない形になっていた。
+`mv` でなく `git mv` を選ぶのは、rename がその場で staged になり、`git add -A` を禁じている制約下で旧パスと新パスを両方明示列挙せずに済むため。
 
 ### `git commit` を意図的に非許可にする
 
@@ -165,8 +179,20 @@ SKILL.md 側の対応は「message に手書きしない」。
 補強が 2 点。
 
 1. add（2）と commit（3）を別ステップにするのは permit gate を維持するため。CLAUDE.md の git 運用規約（[[lw-kit-詳細設計-CLAUDE.md]]）/ `50_feedback/feedback-観察-作業スタイル.md`（ワークスペース側） の「add は allow / commit は deny で `git diff` 確認の gate」運用を skill 内でも崩さない（`&&` で 1 行にまとめない）。この commit permit prompt が最終的な内容確認 gate として機能する。
-2. issue の更新ロジックは `/lw-update-issue` が持つが、同 skill も `disable-model-invocation: true` なので `/lw-commit` からは起動できない。ステップ 1 の未反映時は手順の有無で分岐する。今セッションで `/lw-update-issue` が起動済みなら手順が context にあるので自分で更新し、無ければ lead に起動を依頼して止まる。
-   分岐の線を「手順を持っているか」に引くのは、止めたいのが更新そのものではなく手順を持たない更新だから。`/lw-update-issue` は 🪣 経緯に何を書くかの選別基準と書式を持っており、それを持たないまま推測で更新すると、書式は揃っていても選別が効いていない記録が積まれる。
+2. issue の更新ロジックは `/lw-update-issue` が持つが、同 skill も `disable-model-invocation: true` なので `/lw-commit` からは起動できない。ステップ 1 の未反映時は、手順が context に無ければ `/lw-update-issue` の SKILL.md を読んで手順を得る。
+   止めたいのは更新そのものではなく、手順を持たない更新だから。`/lw-update-issue` は 🪣 経緯に何を書くかの選別基準と書式を持っており、それを持たないまま推測で更新すると、書式は揃っていても選別が効いていない記録が積まれる。読んで手に入れれば同じ基準で更新できるので、止める必要がなくなる。
+
+### 他 skill の SKILL.md を読む形にした
+
+ステップ 1 は `/lw-update-issue` の SKILL.md を直接読む。
+他 skill への path 参照は [[Claude-Code-Skillの書き方]]「参照を解決可能に保つ」が避けよと言う形だが、同セクションが対象にしているのは「関連」セクションや網羅リストで、rename のたびに直す必要が出るもの。
+
+こちらは性質が違う。
+両 skill とも `disable-model-invocation: true` で互いに起動できないという構造的制約があり、手順を手に入れる経路が読む以外に無い。
+網羅リストではなく機能上必須の単一参照なので、外すと skill が動かなくなる。
+
+以前は「手順が context に無ければ lead に依頼して止まる」形だった。
+止めるのをやめたのは、既定の運用（`/lw-update-issue` → `/lw-commit`）では手順が context にある一方、`/lw-commit` を単独で起動した時だけ止まる形になっていて、lead 側から見ると同じ操作が起動順で通ったり止まったりするため。
 
 ### 反映の実行を `/lw-retro` に一本化した
 
@@ -177,6 +203,32 @@ commit フローは畳む動作だけを持つ。
 副作用として、`/lw-retro` を回さない回は反映が走らない。
 反映するかどうかの判断は lead が `/lw-retro` を起動するかどうかで表す。
 commit の側から反映を促す仕組みは置かない（促すと、探索の所作が活用フローに引き戻されて exploration collapse が再発する）。
+
+ステップ 1 が issue を更新することはこれと衝突しない。
+一本化したのは page / memory への反映で、issue の最新化は commit フローが元から持つ責務にあたる。
+線は「commit の単位に対応する記録か」に引く。
+issue は今回の commit が何をしたかの記録なので中に入り、page と memory は蓄積の対象なので外に出る。
+
+同じ理由で、ステップ 1 が見る範囲は列挙で閉じる。
+「issue を見て直したほうがよさそうなら直す」と書くと範囲が開き、背景セクションの書き直しのような探索の所作が commit フローに入り込む。
+何を見るかを列挙しておけば、判定に解釈が要らず、省略も過剰実行も条件で止まる。
+
+### 盤面の転記は commit 側に残す
+
+`1_issues.md` / `2_done.md` への転記は `/lw-commit` が持ち、`/lw-update-issue` には持たせない。
+`/lw-update-issue` の「対象 issue 以外のファイルに触らない」は更新フローを閉じるための不変条件で、盤面を触らせると崩れる。
+
+副作用として、`/lw-update-issue` で状態遷移だけを指示した場合、盤面と issue の状態が一時的にずれる。
+ステップ 4 が `git status` の未 commit 差分から閉じられた issue を拾って転記するので、次の `/lw-commit` で解消する。
+盤面は commit 単位の記録なので、commit しない限りずれたままでよいという整理でもある。
+
+判定を `git status` に置くのは、「次の commit までは未 commit の差分として残っている」という前提そのものを見る手段だから。
+閉じた issue はディレクトリが変わるので、ステップ 1 の WIP 走査（`find -maxdepth 1`）の視界から外れる。
+`find -newer` で拾う案は採らない。基準時刻の置き場が要るが、`/lw-commit` は複数セッションをまたぐので「前回からの差」を skill 側で保持できず、基準の選び方が実行者の解釈になる。
+
+既知の限界が 1 つある。
+mv を `/lw-commit` を通さず手動で commit した場合、未 commit の窓を過ぎているので拾えない。
+盤面の `[[link]]` 全件を実ファイルと突き合わせる一巡なら拾えるが、毎 commit の手数に見合わないので採らない。
 
 ## 完了報告（暗黙完了しない）
 
@@ -242,7 +294,7 @@ gate の価値は「差分が出たときに lead が見るか」で決まり、
 - commit 規約変更時の追従: CLAUDE.md の type 一覧 / project 決定ルール（[[lw-kit-詳細設計-CLAUDE.md]]）が変わったら SKILL.md の転記文言を追従（trailer は「trailer を付けない」が正本）
 - ミスドリブン更新: `/lw-commit` を回して失敗が見つかったら、該当する設計セクションか SKILL.md の手順に平坦に溶かし込む（Boris Cherny 方式）。発見の日付や commit 履歴を積み上げる形では書かない
 - 探索・活用の境界追従: `/lw-retro` 側で反映の範囲が変わったら [[lw-kit-スキル設計-lw-retro]] と本ページの探索・活用の分離の記述を相互に追従
-- `/lw-commit` 自身が触ってよいのは issue（手順が context にある場合のみ）/ `1_issues.md` / `2_done.md` / log / index まで（commit フローに閉じる）
+- `/lw-commit` 自身が触ってよい範囲は commit フローに閉じる（page / memory への反映は `/lw-retro` の責務）。具体的な allowlist は SKILL.md「必須動作」が正本
 
 ## 関連
 
