@@ -27,7 +27,7 @@ Obsidian があると `[[link]]` を GUI で辿れます（無くても動きま
 
    ```text
    いまここ: ③ wiki 化
-   ① add-dir ✓ → ② 調査 ✓ → ③ wiki 化 → ④ 記録 → ⑤ FIXED → ⑥ commit → ⑦ exit
+   ① add-dir ✓ → ② 調査 ✓ → ③ wiki 化 → ④ 記録 → ⑤ commit → ⑥ exit
    ```
 
 2. いまの step だけを説明する。先の step は説明しない。表は使わない
@@ -64,10 +64,8 @@ Claude の応答が返らないローカルコマンド（`/add-dir` など）�
       → できる page は 1 本とは限りません。人物・概念・まとめのように分かれ、互いに `[[link]]` で繋がります
       → 終わったら `index.md` を開いてください。空だった目次に行が並びます。ここが kit の中心です
 
-- [ ] `/lw-update-issue` でこの issue を更新する
-      → この issue の 💧 と 🪣 に、いまやったことが書き込まれます
-
-- [ ] この issue を FIXED にする（`00_issues/.90_fixed/` に移動）
+- [ ] `/lw-update-issue --fixed` でこの issue を更新して FIXED にする
+      → いまやったことが 💧 と 🪣 に書き込まれ、そのまま `00_issues/.90_fixed/` に移動します
       → 終わった issue は消さずに畳みます。後から読み返せます
 
 - [ ] `/lw-commit` で commit する

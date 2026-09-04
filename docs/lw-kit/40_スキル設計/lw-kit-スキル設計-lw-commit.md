@@ -13,8 +13,8 @@ updated: 2026-09-04
 # llm-wiki-kit の commit skill 設計
 
 `/lw-commit` skill の設計書。
-commit という lead 発火の区切りに「issue 最新化の確認 + 記録 + add + commit」を一括で実行する、畳む（活用）に専念する skill。
-現状の `commit plz` を 1 語に畳み、issue 最新化の確認 / `1_issues.md` / `2_done.md` / log・index / add / commit までを束ねる。
+commit という lead 発火の区切りに「issue 最新化 + 状態遷移 + 記録 + add + commit」を一括で実行する、畳む（活用）に専念する skill。
+現状の `commit plz` を 1 語に畳み、issue の最新化と状態遷移 / `1_issues.md` / `2_done.md` / log・index / add / commit までを束ねる。
 観察の掘り起こしと反映の実行（page / memory への書き込み）は探索の所作として [[lw-kit-スキル設計-lw-retro]]（`/lw-retro`）が持つ。
 何を反映すべきかを見つける探索と、畳む活用（commit）を分ける（探索・活用の分離、[[探索・活用ジレンマ]]）。
 **本ページは決定根拠のみを持つ。**
@@ -28,7 +28,7 @@ commit という lead 発火の区切りに「issue 最新化の確認 + 記録 
 
 ```mermaid
 graph LR
-    skill(["/lw-commit"]) -->|"読み込み + 条件付き更新"| issues[("00_issues/")]
+    skill(["/lw-commit"]) -->|"最新化・状態遷移"| issues[("00_issues/")]
     skill -->|"転記"| board[("1_issues.md<br/>2_done.md")]
     skill -->|"追記"| log[("log.md / index.md")]
     skill -->|"add + commit"| git[("git")]
@@ -212,6 +212,11 @@ issue は今回の commit が何をしたかの記録なので中に入り、pag
 同じ理由で、ステップ 1 が見る範囲は列挙で閉じる。
 「issue を見て直したほうがよさそうなら直す」と書くと範囲が開き、背景セクションの書き直しのような探索の所作が commit フローに入り込む。
 何を見るかを列挙しておけば、判定に解釈が要らず、省略も過剰実行も条件で止まる。
+
+対象の数も同じく指示で閉じる。
+名指しされた issue が複数あればその数だけ処理し、名指しが無い時だけ絞り込みに入る。
+複数を閉じる場面は実在する（[[lw-kit-基本設計-チュートリアル]] の 03 は受講者が切った issue と 03 本体の 2 本を閉じる）ので、単数に決め打つと打ち手が無くなる。
+逆に名指しの外へ推定で広げるのは「自発的に閉じない」（`templates/.claude/rules/issue.md`「ユーザー確認」）に反するので禁じる。
 
 ### 盤面の転記は commit 側に残す
 

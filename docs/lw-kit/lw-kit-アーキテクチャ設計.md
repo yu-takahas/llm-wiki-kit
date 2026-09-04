@@ -5,7 +5,7 @@ sources:
   - conversation
   - "[[ソフトウェア設計ドキュメント体系]]"
 created: 2026-07-24
-updated: 2026-08-30
+updated: 2026-09-04
 ---
 
 # llm-wiki-kit アーキテクチャ設計
@@ -93,12 +93,12 @@ issue 管理が外側のフレームとして他の 2 つを包む。
 
 全ての作業は issue の開閉で管理する。
 
-| 段       | skill              | やること                                           |
-| -------- | ------------------ | -------------------------------------------------- |
-| 開く     | `/lw-create-issue` | やることを issue ファイルとして起票する            |
-| 更新     | `/lw-update-issue` | 作業の進捗・中断点・TODO を issue に書き込む       |
-| 振り返り | `/lw-retro`        | セッションで気づいたことをフィードバックに記録する |
-| 畳む     | `/lw-commit`       | 作業記録を log/index に書き込み、git commit する   |
+| 段       | skill              | やること                                                                                      |
+| -------- | ------------------ | --------------------------------------------------------------------------------------------- |
+| 開く     | `/lw-create-issue` | やることを issue ファイルとして起票する                                                       |
+| 更新     | `/lw-update-issue` | 作業の進捗・中断点・TODO を issue に書き込む。指示があれば状態遷移まで行う                    |
+| 振り返り | `/lw-retro`        | セッションで気づいたことをフィードバックに記録する                                            |
+| 畳む     | `/lw-commit`       | issue を最新化し、状態遷移・`1_issues.md` / `2_done.md`・log/index を反映して git commit する |
 
 `/lw-update-issue` はどの段の間でも繰り返し起動する。
 `/lw-retro`(探索)と `/lw-commit`(活用)は責務を分離している。
@@ -110,11 +110,11 @@ guide は issue の ☔ TODO に流し込むワークフローのメニューで
 graph LR
     create(["/lw-create-issue"]) -->|"作成"| issues[("00_issues/")]
     issues -->|"読み書き"| update(["/lw-update-issue"])
-    update -->|"進行中・中断点更新"| issues
+    update -->|"更新・状態遷移"| issues
     issues --> retro(["/lw-retro"])
     retro -->|"観察・知見"| feedback[("50_feedback/")]
     retro --> commit(["/lw-commit"])
-    commit -->|"状態遷移"| issues
+    commit -->|"最新化・状態遷移"| issues
     commit -->|"追記"| log[("log.md / index.md")]
     commit -->|"commit"| git[("git")]
 ```
@@ -234,22 +234,23 @@ instance が複数あっても仕様は復元できない。
 
 llm-wiki-kit で使う言葉を定義する。
 
-| 用語           | 定義                                                                                       |
-| -------------- | ------------------------------------------------------------------------------------------ |
-| kit            | llm-wiki-kit のこと。ワークスペースの元になるテンプレート                                  |
-| ワークスペース | `setup.sh` で作る自分専用のリポジトリ。ここに wiki を書いていく                            |
-| issue          | いま取り組んでいるタスクを 1 ファイルにまとめたもの。`00_issues/` に置く                   |
-| guide          | タスク種別ごとの手順のメニュー。issue の TODO にコピーして使う。`00_issues/.guide/` に置く |
-| skill          | スラッシュコマンド(`/lw-render` 等)。`.claude/skills/` に置く                              |
-| rule           | ファイルの種類に応じて自動で読み込まれる規約。`.claude/rules/` に置く                      |
-| wiki page      | `30_wiki/` や `40_project/` に置く Markdown ファイル。知識を蓄積する単位                   |
-| case root      | 案件のハブになる page。`40_project/<案件>/<案件>.md`                                       |
-| raw            | 調べた資料をそのまま置いたもの。`10_raw/` に入れる                                         |
-| render         | raw を wiki page に変換すること。`/lw-render` で行う                                       |
-| knowledge      | llm-wiki-kit を理解するための参考 wiki。`docs/knowledge/` に置く                           |
-| lead           | ユーザーと直接やり取りするメインの Claude Code セッション                                  |
-| teammate       | lead が立ち上げる別の Claude Code セッション(advisor / worker 等)                          |
-| 設計書         | 「なぜそうしたか」を記録する文書。`docs/lw-kit/` に置く                                    |
+| 用語           | 定義                                                                                                                   |
+| -------------- | ---------------------------------------------------------------------------------------------------------------------- |
+| kit            | llm-wiki-kit のこと。ワークスペースの元になるテンプレート                                                              |
+| ワークスペース | `setup.sh` で作る自分専用のリポジトリ。ここに wiki を書いていく                                                        |
+| issue          | いま取り組んでいるタスクを 1 ファイルにまとめたもの。`00_issues/` に置く                                               |
+| 状態遷移       | issue を別のフォルダへ mv して WIP / FIXED 等の状態を変えること。正本は `templates/.claude/rules/issue.md`「状態管理」 |
+| guide          | タスク種別ごとの手順のメニュー。issue の TODO にコピーして使う。`00_issues/.guide/` に置く                             |
+| skill          | スラッシュコマンド(`/lw-render` 等)。`.claude/skills/` に置く                                                          |
+| rule           | ファイルの種類に応じて自動で読み込まれる規約。`.claude/rules/` に置く                                                  |
+| wiki page      | `30_wiki/` や `40_project/` に置く Markdown ファイル。知識を蓄積する単位                                               |
+| case root      | 案件のハブになる page。`40_project/<案件>/<案件>.md`                                                                   |
+| raw            | 調べた資料をそのまま置いたもの。`10_raw/` に入れる                                                                     |
+| render         | raw を wiki page に変換すること。`/lw-render` で行う                                                                   |
+| knowledge      | llm-wiki-kit を理解するための参考 wiki。`docs/knowledge/` に置く                                                       |
+| lead           | ユーザーと直接やり取りするメインの Claude Code セッション                                                              |
+| teammate       | lead が立ち上げる別の Claude Code セッション(advisor / worker 等)                                                      |
+| 設計書         | 「なぜそうしたか」を記録する文書。`docs/lw-kit/` に置く                                                                |
 
 ## 関連
 

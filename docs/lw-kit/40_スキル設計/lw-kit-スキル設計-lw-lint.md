@@ -10,7 +10,7 @@ sources:
   - "[[Claude-Code-Skillの書き方]]"
   - conversation
 created: 2026-07-01
-updated: 2026-08-31
+updated: 2026-09-04
 ---
 
 # llm-wiki-kit の lint skill 設計
@@ -165,7 +165,6 @@ lint skill 自身はファイルを編集しない（Write は `/tmp/` へのレ
 
 理由:
 
-- lw-render と同じ「下書きのみ提示」方針を踏襲
 - orphan page の削除 / contradictions の解消 / stale claims の更新はいずれも lead の判断が必要
 - broken link の修正も per-entity で対応が分かれる（plain text 化 / code span 化 / alias 書き換え / 新規 entity 作成）
 
@@ -199,6 +198,6 @@ SKILL.md と本設計書はペアで更新する。
 - [[claude-obsidian]] — wiki-lint の 10 項目チェック + 文体 + Semantic Tiling
 - [[llmwiki]] — `lint` MCP ツール（19 チェックコード）
 - [[LLM-Wiki-ingest-skillのパターン]] — 4 実装横断のパターン
-- [[lw-kit-スキル設計-lw-render]] — 同じ二段階階層の先例、修正方針の基準
+- [[lw-kit-スキル設計-lw-render]] — 同じ二段階階層の先例
 - [[Claude-Code-Skillの書き方]] — SKILL.md 一般論
 - [[lw-kit-詳細設計-rules]] — rules の wiki schema / wiki 規約のハブ

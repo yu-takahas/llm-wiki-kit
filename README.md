@@ -68,7 +68,7 @@ Claude Code が起動したら、次のように話しかけると開始しま�
 | issue                    | 内容                                             |
 | ------------------------ | ------------------------------------------------ |
 | `tutorial-01-first-wiki` | テーマを 1 つ調査し、最初の wiki page を作成する |
-| `tutorial-02-review`     | もう 1 本作成し、レビューと修正のサイクルを回す  |
+| `tutorial-02-review`     | 01 で作った page をレビューし、指摘を採って直す  |
 | `tutorial-03-graduation` | 自分のテーマで一通りを自走する                   |
 | `tutorial-04-weekly`     | wiki が蓄積した後のメンテナンスを行う            |
 
@@ -112,9 +112,9 @@ Obsidian があれば `[[link]]` を GUI で辿れます。
 **issue 管理** — すべての作業を issue の開閉で追う
 
 - `/lw-create-issue` — 作業を issue として起票する
-- `/lw-update-issue` — 進捗・中断点・TODO を issue に書き込む
+- `/lw-update-issue` — 進捗・中断点・TODO を issue に書き込む（`--fixed` / `--faded` で閉じるところまで）
 - `/lw-retro` — 気づいたことを `50_feedback/` や wiki に記録する（記録前に確認を求めます）
-- `/lw-commit` — `log.md` と `index.md` を更新して commit する
+- `/lw-commit` — issue を最新化し、`log.md` と `index.md` を更新して commit する（`--fixed` / `--faded` で閉じるところまで）
 
 **ナレッジ蓄積** — 外部の情報を調べて wiki にする
 

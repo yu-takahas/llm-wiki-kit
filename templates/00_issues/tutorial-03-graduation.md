@@ -31,7 +31,7 @@ tags: [tutorial]
 
    ```text
    いまここ: ② 自走
-   ① issue を切る ✓ → ② 自走 → ③ 記録 → ④ 振り返り → ⑤ FIXED → ⑥ commit → ⑦ exit
+   ① issue を切る ✓ → ② 自走 → ③ 記録 → ④ 振り返り → ⑤ commit → ⑥ exit
    ```
 
 2. いまの step だけを説明する。先の step は説明しない。表は使わない
@@ -65,16 +65,16 @@ Claude の応答が返らないローカルコマンドのときは、「終わ�
 - [ ] 自分のテーマで一通りの流れを自走する
       → 調べる → wiki 化する → レビューする → 直す。順番は 01 と 02 でやった通りです
 
-- [ ] `/lw-update-issue` で issue を更新する
-      → 自分で切った issue が対象です。この issue にも、自走してみてどうだったかを残しておきます
+- [ ] `/lw-update-issue` で自分で切った issue を更新する
+      → 自走してみてどうだったかが 🪣 に残ります
 
 - [ ] `/lw-retro` でチュートリアル全体の振り返りをする
       → 01 からここまでで気づいたことを `50_feedback/` に書き出します。次の自分への申し送りです
 
-- [ ] issue を FIXED にする
-      → 自分で切った issue と、この issue の 2 本が対象です
-
-- [ ] `/lw-commit` で commit する
+- [ ] `/lw-commit --fixed` で 2 本とも FIXED にして commit する
+      → 閉じる issue を 2 本とも名指しします: `/lw-commit --fixed <自分で切った issue 名> tutorial-03-graduation`
+      → どちらも `00_issues/.90_fixed/` に移動します。終わった issue は消さずに畳みます
+      → 01 と 02 では記録の step で畳みましたが、この回は振り返りのあとに畳むので commit と一緒にします
 
 - [ ] `/exit` でセッションを終える
       → チュートリアルはここで終わりです。`00_issues/tutorial-04-weekly.md` は wiki が溜まってから開いてください

@@ -2,7 +2,7 @@
 name: lw-commit
 effort: medium
 description: commit という区切りで「issue 最新化 + 状態遷移 + 1_issues / 2_done + log / index + add + commit」を一括で実行する skill。手動 /lw-commit のみ起動。
-argument-hint: "[--fixed|--faded] [補足メモ（省略可）]"
+argument-hint: "[--fixed|--faded] [issue 名（複数可） / 補足メモ]"
 allowed-tools:
   [
     Read,
@@ -22,7 +22,7 @@ disable-model-invocation: true
 commit という lead 発火の区切りに、issue の最新化確認 + 記録 + add + commit を一括で実行する skill。
 設計判断の why は `$KIT/docs/lw-kit/40_スキル設計/lw-kit-スキル設計-lw-commit.md`、本ファイルは実行手順の how。
 
-入力: `$ARGUMENTS` は任意。`--fixed` / `--faded` で対象 issue の状態遷移を指示する（自然文の「FIXED にして」「閉じて」も同じ意味で受ける）。残りは補足メモ（commit 範囲のヒント等）として読む。
+入力: `$ARGUMENTS` は任意。`--fixed` / `--faded` で対象 issue の状態遷移を指示する（自然文の「FIXED にして」「閉じて」も同じ意味で受ける）。残りは対象 issue の名前（複数可）または補足メモ（commit 範囲のヒント等）として読む。
 
 ## Process 概観
 
@@ -45,6 +45,7 @@ commit という lead 発火の区切りに、issue の最新化確認 + 記録 
 | 特に直すところは無さそうなので issue を見ない | ステップ 1 の 3 項目は毎回見る。「無さそう」は見た後にしか言えない          |
 | ついでに背景セクションも整えておく            | 3 項目の外は触らない。issue 本体の改訂は `/lw-update-issue` の責務          |
 | 全部 `[x]` になったので FIXED にしておく      | 指示が無ければ状態遷移しない。判断して lead に確認するところまで            |
+| 2 本名指しされたが本命は 1 本なので絞る       | 名指しされた数だけ処理する。絞るのは名指しが無い時だけ                      |
 
 ## 事前条件
 
@@ -61,6 +62,7 @@ commit 前に issue を最新化する。
 手順:
 
 1. `find 00_issues/ -maxdepth 1 -name "*.md"` で WIP issue を列挙し、worktree 名と会話文脈で今セッションの対象を絞る。絞り込みに迷ったら `grep -rl "<作業対象の語>" 00_issues/` で候補を機械的に引く（`$ARGUMENTS` に commit 範囲のヒントがあればその語を使う）
+   - lead が複数の issue を名指ししている場合は絞らず、名指しされた各 issue について手順 2 と 3 を繰り返す。推定で複数に広げるのは禁止で、対象が絞れない時はエラーハンドリングのとおり列挙して停止する
 2. 対象 issue で次の 3 つを見る。これ以外は編集しない
    - ☔ TODO: 今セッションで完了した項目を `[x]` にする。この区切りの `- [ ] /lw-commit` 行も含む
    - 💧 進行中 / 🌂 中断点: 今セッションの作業を反映しているか。未反映なら `/lw-update-issue` の手順に従って更新する。🪣 に触る前に `LANG=ja_JP.UTF-8 date` を叩き、見出しの日時を実測で書く

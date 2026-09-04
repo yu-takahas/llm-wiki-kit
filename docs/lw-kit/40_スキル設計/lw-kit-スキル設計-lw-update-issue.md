@@ -26,7 +26,7 @@ updated: 2026-09-04
 ```mermaid
 graph LR
     issue[("00_issues/&lt;name&gt;.md")] -->|"読み込み"| skill(["/lw-update-issue"])
-    skill -->|"進行中・中断点更新"| issue
+    skill -->|"更新・状態遷移"| issue
 ```
 
 ## skill 名
