@@ -89,6 +89,7 @@ commit 前に issue を最新化する。
 
 そのうえで `git status` で対象を確認し、関連ファイルを明示列挙して `git add` する。
 `git add -A` / `git add .` は使わない（無関係な未追跡ファイルを巻き込まないため）。
+mv 済みの issue は新パスだけを列挙する。`git mv` が旧新の両方を staged にしているので、旧パスを足すと `pathspec did not match any files` で落ちる（前段の `/lw-update-issue --fixed` が mv した場合も同じ）。
 このステップは自走してよい。
 
 ### 3. commit
@@ -121,6 +122,7 @@ commit 後、3 ステップの結果を 1 行にまとめて完了報告を 1 �
 | issue が未反映で手順も context に無い | `.claude/skills/lw-update-issue/SKILL.md` を Read して手順を得る（推測で補わない、止まらない）                                                                              |
 | 対象 issue が複数あって絞れない       | 候補を列挙して lead に選択を促す。状態遷移の指示がある場合は特に、推定で閉じない                                                                                            |
 | `git mv` が not under version control | 起票直後の issue はまだ追跡されていない。`git add <path>` してから `git mv` を再実行する                                                                                    |
+| `git add` が pathspec did not match   | mv 済みの issue の旧パスを列挙している。旧パスを外して新パスだけで再実行する                                                                                                |
 | markdownlint エラー（commit 時 hook） | hook が commit を止める。対象が「必須動作」の allowlist 内なら修正 → 再 add → 再 commit（permit は 2 回目が走る）。page 等 allowlist 外ならエラー箇所を提示して lead に渡す |
 | commit message の project 不明        | 主旨優先で決める、判然としなければ変更数最多の project                                                                                                                      |
 

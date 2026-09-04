@@ -58,12 +58,12 @@ Claude の応答が返らないローカルコマンドのときは、「終わ�
 - [ ] `/lw-archive-weekly` で週次アーカイブする
       → `2_done.md` の完了タスクと `1_issues.md` の `[x]` を週次ファイルに移し、盤面から消します。未完了のタスクだけが残ります
 
-- [ ] `/lw-update-issue --fixed` でこの issue を更新して FIXED にする
-      → 検査結果とアーカイブの内容が 💧 と 🪣 に書き込まれ、そのまま `00_issues/.90_fixed/` に移動します
-      → 終わった issue は消さずに畳みます
+- [ ] `/lw-update-issue` でこの issue を更新する
+      → 検査結果とアーカイブの内容が 💧 と 🪣 に書き込まれます
 
-- [ ] `/lw-commit` で commit する
-      → 週次ファイルへの移動と盤面の書き換えが git に記録されます
+- [ ] `/lw-commit --fixed` で commit してこの issue を FIXED にする
+      → 週次ファイルへの移動と盤面の書き換えが git に記録され、issue が `00_issues/.90_fixed/` に移動します
+      → 終わった issue は消さずに畳みます
 
 - [ ] `/exit` でセッションを終える
 

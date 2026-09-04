@@ -64,12 +64,12 @@ Claude の応答が返らないローカルコマンド（`/add-dir` など）�
       → できる page は 1 本とは限りません。人物・概念・まとめのように分かれ、互いに `[[link]]` で繋がります
       → 終わったら `index.md` を開いてください。空だった目次に行が並びます。ここが kit の中心です
 
-- [ ] `/lw-update-issue --fixed` でこの issue を更新して FIXED にする
-      → いまやったことが 💧 と 🪣 に書き込まれ、そのまま `00_issues/.90_fixed/` に移動します
-      → 終わった issue は消さずに畳みます。後から読み返せます
+- [ ] `/lw-update-issue` でこの issue を更新する
+      → いまやったことが 💧 と 🪣 に書き込まれます
 
-- [ ] `/lw-commit` で commit する
-      → ここまでの変更が git に記録されます
+- [ ] `/lw-commit --fixed` で commit してこの issue を FIXED にする
+      → ここまでの変更が git に記録され、issue が `00_issues/.90_fixed/` に移動します
+      → 終わった issue は消さずに畳みます。後から読み返せます
 
 - [ ] `/exit` でセッションを終える
       → issue 1 本が 1 セッションです。続きは `claude` を起動し直し、`00_issues/tutorial-02-review.md` を読むところから始めます

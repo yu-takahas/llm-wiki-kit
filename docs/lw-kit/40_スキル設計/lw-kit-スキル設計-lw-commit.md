@@ -14,7 +14,7 @@ updated: 2026-09-04
 
 `/lw-commit` skill の設計書。
 commit という lead 発火の区切りに「issue 最新化 + 状態遷移 + 記録 + add + commit」を一括で実行する、畳む（活用）に専念する skill。
-現状の `commit plz` を 1 語に畳み、issue の最新化と状態遷移 / `1_issues.md` / `2_done.md` / log・index / add / commit までを束ねる。
+現状の `commit plz` を 1 語に畳んだもの。束ねる範囲は SKILL.md の `description` が正本。
 観察の掘り起こしと反映の実行（page / memory への書き込み）は探索の所作として [[lw-kit-スキル設計-lw-retro]]（`/lw-retro`）が持つ。
 何を反映すべきかを見つける探索と、畳む活用（commit）を分ける（探索・活用の分離、[[探索・活用ジレンマ]]）。
 **本ページは決定根拠のみを持つ。**
@@ -105,6 +105,11 @@ issue の一巡と日時の実測に要るコマンドだけを個別に許可�
 issue の状態遷移はファイル移動なので実行手段が要るが、kit の skill は 1 つも mv を持っておらず、状態遷移に引き受け手がいない形になっていた。
 `mv` でなく `git mv` を選ぶのは、rename がその場で staged になり、`git add -A` を禁じている制約下で旧パスと新パスを両方明示列挙せずに済むため。
 
+この利点は、そのまま add の側の制約になる。
+staged 済みの rename に旧パスを重ねて `git add` すると、作業ツリーにファイルが無いので `pathspec did not match any files` で落ちる。
+実測で踏んだのは前段の `/lw-update-issue --fixed` が mv したケースで、本 skill から見ると自分が mv していないぶん旧パスが残っているように見える（2026-09-04、チュートリアル 01 の通し）。
+手順そのものは SKILL.md のステップ 2 が持つ。
+
 ### `git commit` を意図的に非許可にする
 
 `Bash(git commit:*)` は allowed-tools に**含めない**。
@@ -140,7 +145,7 @@ why 列が指す設計書 2 本は規約そのものを持たない。
 - 規約の why → SSOT は [[lw-kit-詳細設計-CLAUDE.md]]（CLAUDE.md グローバル / プロジェクト双方を含む）。SKILL.md は参照を向けるだけ。手動 commit でも効く普遍ルールを skill にコピーすると、skill を使わない commit で規約が二重管理になり実態と乖離する
 - 実行時に必要な確定文言 → SKILL.md に転記する。実行時 context として手元に無いと動けないもの:
   - type 一覧
-  - project 決定の判断手順（主旨優先 / 変更数で上書きしない）
+  - project 決定の判断手順
 - `Co-Authored-By:` trailer → 転記も手書きもしない。根拠は「trailer を付けない」
 
 [[lw-kit-スキル設計-lw-render]] が言い訳対戦表の確定文言を SKILL.md へ転記しているのと同じ理屈で、実行時に手元に無いと動けないものだけを重複させる。
@@ -256,8 +261,10 @@ commit 実行時に hook が走り、それが唯一の検査点になる。
 
 副作用を 2 つ許容している。
 
-- **format 差分が permit の後に入る。** `format` ジョブは prettier の整形結果を `git add` で staged に戻すので、ユーザーが permit 時に terminal で見た diff と実際に commit される内容が format 分ずれる。format 差分だけなら止めずに通す
-- **lint エラーの発覚が commit 実行時になる。** markdownlint エラーは permit を通過した後に hook が出す。修正 → 再 add → 再 commit で、permit は 2 回目が走る
+- **format 差分が permit の後に入る。** `format` ジョブは prettier の整形結果を `git add` で staged に戻すので、ユーザーが permit 時に terminal で見た diff と実際に commit される内容が format 分ずれる
+- **lint エラーの発覚が commit 実行時になる。** markdownlint エラーは permit を通過した後に hook が出す
+
+どちらも実行時の扱い（通すか止めるか、止まった後の手順）は SKILL.md が持つ。
 
 ### 先叩きと差分確認 gate を撤回した
 
@@ -289,7 +296,7 @@ gate の価値は「差分が出たときに lead が見るか」で決まり、
 
 手順を CLAUDE.md に数行書いて済ませる案は採らない。根拠:
 
-1. commit という区切りの定型作業（issue 最新化の確認 / `1_issues.md` / `2_done.md` / log・index / add / commit）を 1 語に束ねられ、毎回の手作業の漏れ（log 追記忘れ等）を防げる
+1. commit という区切りの定型作業を 1 語に束ねられ、毎回の手作業の漏れ（log 追記忘れ等）を防げる
 2. `commit plz` の置き換えとして起動が素直で、permit gate（add allow / commit deny）を skill の allowed-tools として自己文書化できる
 
 ## 保守規律

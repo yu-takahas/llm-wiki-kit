@@ -59,10 +59,11 @@ Claude の応答が返らないローカルコマンドのときは、「終わ�
 - [ ] `/lw-fix-review` でレビュー指摘を反映する
       → 採る指摘と採らない指摘を分け、採ったものだけを page に反映します
 
-- [ ] `/lw-update-issue --fixed` でこの issue を更新して FIXED にする
-      → 何を採って何を採らなかったかが 🪣 に残り、そのまま `00_issues/.90_fixed/` に移動します
+- [ ] `/lw-update-issue` でこの issue を更新する
+      → 何を採って何を採らなかったかが 🪣 に残ります
 
-- [ ] `/lw-commit` で commit する
+- [ ] `/lw-commit --fixed` で commit してこの issue を FIXED にする
+      → ここまでの変更が git に記録され、issue が `00_issues/.90_fixed/` に移動します
 
 - [ ] `/exit` でセッションを終える
       → 続きは `claude` を起動し直し、`00_issues/tutorial-03-graduation.md` を読むところから始めます

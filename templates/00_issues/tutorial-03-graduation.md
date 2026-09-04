@@ -74,7 +74,6 @@ Claude の応答が返らないローカルコマンドのときは、「終わ�
 - [ ] `/lw-commit --fixed` で 2 本とも FIXED にして commit する
       → 閉じる issue を 2 本とも名指しします: `/lw-commit --fixed <自分で切った issue 名> tutorial-03-graduation`
       → どちらも `00_issues/.90_fixed/` に移動します。終わった issue は消さずに畳みます
-      → 01 と 02 では記録の step で畳みましたが、この回は振り返りのあとに畳むので commit と一緒にします
 
 - [ ] `/exit` でセッションを終える
       → チュートリアルはここで終わりです。`00_issues/tutorial-04-weekly.md` は wiki が溜まってから開いてください
