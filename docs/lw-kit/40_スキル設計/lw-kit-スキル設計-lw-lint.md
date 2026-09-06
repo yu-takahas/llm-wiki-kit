@@ -168,6 +168,14 @@ lint skill 自身はファイルを編集しない（Write は `/tmp/` へのレ
 - orphan page の削除 / contradictions の解消 / stale claims の更新はいずれも lead の判断が必要
 - broken link の修正も per-entity で対応が分かれる（plain text 化 / code span 化 / alias 書き換え / 新規 entity 作成）
 
+`index.md` 未掲載（検出項目 6）も自動修正しない。
+載せ先の type セクションは page の `type` で決まるが、セクション内の位置と一行説明には判断が残る。
+`templates/.claude/rules/log-index.md`「index.md の記入」が、type 内をテーマ別に隣接配置すること（既存の隣接グループに合うか判断し、合わなければ末尾）と `- [[title]] — 一行説明` を要求しているため。
+自動修正はこの 2 つを skip する形になる。
+
+この項目を明示するのは、8 項目の中で唯一「修正が一意に決まる」ように見え、自動化の検討が繰り返し起きるため。
+線は多解性そのものでなく、規約が判断を要求しているかどうかに引く。
+
 ## Process の設計判断
 
 broken link 検出と frontmatter 検証は確定的なチェックなので、Bash スクリプトで実行する方が速く正確。
