@@ -5,6 +5,7 @@ description: Spawns and manages Agent Teams teammates via cmux. Use when setting
 disable-model-invocation: true
 allowed-tools:
   - Read
+  - Glob
   - Agent
   - SendMessage
   - TaskCreate
@@ -75,7 +76,7 @@ shutdown: ユーザーの確認を得てから、各 teammate に `SendMessage({
 
 手順:
 
-1. 現在の WIP issue を特定する（worktree 名 / `ls 00_issues/*.md` から推定）
+1. 現在の WIP issue を特定する（worktree 名 / `Glob(00_issues/*.md)` から推定）
 2. issue の `related:` / `sources:` / 本文のリンク先を「関連資料」として列挙する
 3. fable を spawn する。prompt の要点:
    - issue と関連資料を読んで内容を把握する
@@ -134,6 +135,9 @@ teammate 構成・運用に関する制約。フロー横断で適用する。
 - teammate の briefing prompt に報告経路を書く。`SendMessage({to: "team-lead", ...})` で返すこと、プレーンテキスト出力は lead に届かないこと、考えがまとまった時点で途中でも打つことの 3 点。書かないと teammate は報告したつもりで届かず、lead 側には idle 通知だけが見える
 - teammate の briefing prompt に「触らないファイルリスト」を含める（`log.md` / `index.md` / `1_issues.md` / `2_done.md` / 他 teammate 担当ファイル等。lead 集約で管理するファイルを teammate が個別更新すると衝突する）
 - teammate は作業開始前にアプローチを lead に報告する。lead はアプローチが妥当と判断したらユーザーに確認せず承認してよい
+- teammate の briefing prompt に終了状態を測定可能な形で書く。残ったものを 1 件ずつ説明できる形にする
+- teammate の briefing prompt に完了報告の形を書く。終了状態が満たされたことを確かめた手段と実出力を添えること。lead はそれを見てから次へ進み、ファイルで確かめられる主張は Read で 1 件当てる
+- teammate の briefing prompt にエスカレーション順を書く。teammate は詰まったら待たずに lead に問い、lead は自分で答えられないものだけユーザーに上げる
 - lead は teammate を shutdown する前に必ずユーザーに「cleanup 進めていい?」を確認する
 - 一時的な調査・レビュー用 subagent（finder 等、結果だけ欲しいもの）は `name` なしで spawn する。team アクティブ中に `name` 付きで Agent を呼ぶと teammate 化して管理対象が増える
 - task を使う場合、所有者の設定は dispatch より前に済ませる。後から設定すると当人に割り当て通知が飛び、報告済みの teammate との往復が生じる

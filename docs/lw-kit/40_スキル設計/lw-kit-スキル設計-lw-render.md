@@ -225,5 +225,5 @@ skill が触らないのは raw 元ファイルのみ。
 - [[プロンプト設計原則]] — 本設計書の各判断の上位原則
 - [[赤ずきんの原則]] / [[Lost-in-the-Middle]] / [[Chain-of-Thought]] / [[Self-Refine]] / [[CO-STAR]] / Boris-Cherny / [[Progressive-Disclosure]] — 設計判断の根拠（個別 entity）
 - [[Claude-Code-Hook]] / [[Sub-Agent]] / [[context-fork]] / [[Dynamic-Context-Injection]] — 採用しなかった機能（「採用しなかった機能」セクション参照）
-- [[lw-kit-詳細設計-rules]] — rules の構成（wiki / wiki / project / issue / skeleton-confirm の設計・運用・改訂の起点）
+- [[lw-kit-詳細設計-rules]] — rules の構成（wiki / wiki / project / issue / pre-flight の設計・運用・改訂の起点）
 - [[lw-kit-アーキテクチャ設計]] — skill 群全体での位置づけ（wiki render ファミリー）

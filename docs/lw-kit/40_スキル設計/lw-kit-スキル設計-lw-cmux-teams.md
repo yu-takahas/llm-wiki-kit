@@ -5,7 +5,7 @@ sources:
   - conversation
   - 10_raw/20260715_claude-code-agent-teams-cmux調査.md（ワークスペース側の raw）
 created: 2026-04-16
-updated: 2026-08-31
+updated: 2026-09-08
 ---
 
 # llm-wiki-kit の lw-cmux-teams skill 設計
@@ -48,7 +48,9 @@ teammate の起動は副作用が大きく(トークンコスト、ペイン占�
 許可ツールの列挙は SKILL.md の `allowed-tools` が正本。
 
 teammate の spawn と管理に必要なものだけに絞っている。
-Bash を入れていないのは、teammate が自分でファイルを触る経路を lead 側に持たせないため。
+Bash を入れていないのは、lead がこの skill の中でファイルを直接触る経路を持たせないため。
+WIP issue の特定には `Glob` を使う（dot ディレクトリ配下が `ls` の既定出力に出ないので、doc-review 側と手段を揃える）。
+この範囲では teammate の完了報告のうちファイルで確かめられる主張は Read で当たれるが、コマンド由来の出力は lead 側で再現しない。
 
 ## 用語
 
@@ -103,6 +105,8 @@ advisor のモデルに fable を選んだ理由: 考え込まなくても賢い
 
 具体的なルール一覧は SKILL.md が正本。
 
+根拠を持つのは事故から入ったルールで、運用上の既定（人数の上限・命名・モデル選択等）は根拠を持たない。
+
 現行ルールの設計根拠:
 
 - 最大 5 人: トークンコスト管理。公式推奨も 3-5 人
@@ -113,6 +117,9 @@ advisor のモデルに fable を選んだ理由: 考え込まなくても賢い
 - 触らないファイルリスト: briefing に記載が無いまま worker 4 名が log.md / index.md を更新した事故の再発防止。fresh-context の teammate は CLAUDE.md のセルフチェックに従って正しく動くので、触らせたくないファイルは briefing 側で明示しないと止まらない
 - 一時 subagent の name なし spawn: `name` の有無が teammate（管理対象・SendMessage 宛先）と使い捨て subagent の境界になるため。name 付きで呼ぶと teammate 化する
 - briefing に報告経路を書く: teammate のプレーンテキスト出力は lead に届かず、`SendMessage` を呼ばないと報告にならない。書かないと teammate は報告したつもりで待機し、lead 側には idle 通知だけが届く。idle は報告の不在を意味しないので、この状態は催促でも判別できない
+- briefing に終了状態を測定可能な形で書く: 測定できない条件だと teammate 側の解釈で完了が決まる。ただし測定可能なだけでは足りず、件数を数える型の条件はその語そのものを話題にしている箇所が残ると破綻する。2026-05-27 の事故で実際に起きた形（破綻条件の書き方は SKILL.md が持つ）
+- briefing に完了報告の形を書く: 報告だけでは進捗と実態を区別できない。idle は報告の不在と区別できない（報告経路の項）ので、stall を監視で捉えるのでなく、確かめた手段と実出力を報告に添えさせて lead が見る形にした。監視を足しても判別できないものは判別できず、進捗のナレーションが増える。2026-05-27 の事故（完了報告を検証せずに受け取り、stall と未着手の完了報告を取りこぼしかけた）の再発防止
+- briefing にエスカレーション順を書く: ユーザーの直接依頼を teammate に回さないことは定めているが、逆向きの経路には定義がない。詰まった teammate は進みも問いもせずに止まるので、行き先を書かないと stall の一因になる（由来の記録は残っていない）
 
 ## 運用 / Troubleshooting
 
@@ -167,7 +174,7 @@ v2.1.178 で両ツールが完全廃止。暗黙チーム方式に移行。
 
 ## 保守規律
 
-- 本設計書と SKILL.md の同期: SKILL.md を変更したら本設計書の `updated:` も揃える。具体値(パターン列挙 / ルール一覧 / spawn 引数 / advisor 仕様)は SKILL.md が正本、設計書は why(設計根拠 / 却下代替案)を持つ
+- 本設計書と SKILL.md の同期: SKILL.md を変更したら本設計書の `updated:` も揃える。具体値（冒頭の宣言のとおり）は SKILL.md が正本、設計書は why(設計根拠 / 却下代替案)を持つ
 - Agent Teams API 変更時の追従: v2.1.178 で TeamCreate / TeamDelete が廃止されたように、API 変更があれば SKILL.md と設計書の両方を追従
 
 ## 関連

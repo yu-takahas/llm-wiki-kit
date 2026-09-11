@@ -11,7 +11,7 @@ sources:
   - https://zenn.dev/cureapp/articles/65b9a99d22ce2b
   - https://arxiv.org/abs/2307.03172
 created: 2026-05-14
-updated: 2026-08-10
+updated: 2026-09-08
 ---
 
 # Claude Code のメモリ階層
@@ -120,11 +120,20 @@ paths:
 ```
 
 - `paths` なし → `.claude/CLAUDE.md` と同じ優先度で 起動時ロード
-- `paths` あり → Claude が matching file を Read した瞬間にロード、セッション中保持
+- `paths` あり → Claude が matching file を Read した瞬間にロード、セッション中保持（同じ context 内で 2 度目以降に一致しても再注入されない。`/compact` 後は該当ファイルを再 Read した時に読み直される）
 - glob + brace expansion 対応
 - symlinks 対応（複数 project で共有可能）
 - user-level rules: `~/.claude/rules/` も同様（project rules より前にロード）
 - `.md` は再帰的に発見されるので、`frontend/` `backend/` のようにサブディレクトリで整理できる
+
+次の 2 点は公式 docs に記載が無く、実測で確認した挙動。
+
+rule の索引はセッション開始時に作られる。
+セッション途中で新しく置いた rule は、`paths` が一致するファイルを読んでも発火しない（既にある rule は同じ操作で発火する）。
+新設した rule の発火を確かめるには、セッションを開き直す。
+
+`.claude/` 配下も glob の対象になる。
+`.claude/CLAUDE.md` は起動時に memory の経路でも載るが、Read ツールで開けば `paths` の一致としても発火する。
 
 `paths:` 付き rule が、常時ロードを避ける主な手段。
 paths なしで常時ロードする運用は「使い分けの判断」セクション参照。
