@@ -15,6 +15,8 @@ argument-hint: "[task description]"
 
 # lw-cmux-teams
 
+設計判断の why は `$KIT/docs/lw-kit/40_スキル設計/lw-kit-スキル設計-lw-cmux-teams.md`、本ファイルは how + 具体値の正本。
+
 cmux 上で Agent Teams を使うための skill。
 タスク内容を受け取りチーム構成を決定して teammate を spawn・管理する。
 引数なしで呼ぶと fable advisor を 1 人立ち上げて待機する。
@@ -24,7 +26,7 @@ cmux 上で Agent Teams を使うための skill。
 - lead: 現在のセッション。ユーザーと直接対話し、teammate を spawn・管理する実行者
 - teammate: lead から spawn される子エージェント。独立した Claude Code フルセッション
 - worker: teammate のうち汎用的なタスク実行役（`worker-N`）。役割が分化していない場合のフォールバック
-- advisor: teammate のうち助言専任の役割。read / search / アドバイスのみ、原則書き込みしない
+- advisor: teammate のうち助言専任の役割。read / search / アドバイスのみ。lead が明示的に依頼した場合を除き書き込みしない
 
 ## Input
 
@@ -52,7 +54,18 @@ Agent ツールに渡す引数:
 - `subagent_type`: `.claude/agents/` 配下に定義があればそのタイプ名を指定。未定義なら省略
 - `model`: 既定 `sonnet`（advisor は `fable`）
 - `effort`: advisor は `medium`、他は省略（セッション既定を継承）
-- `prompt`: 個別 teammate への指示（役割 / 読むべき資料 / やらないこと）
+- `prompt`: briefing。次の 8 要素を全て書く
+
+briefing の 8 要素:
+
+1. 役割（何をする teammate か）
+2. 読むべき資料（パスで渡す。teammate は lead の context を持たない）
+3. やらないこと
+4. 触らないファイル（`log.md` / `index.md` / `1_issues.md` / `2_done.md` / 他 teammate 担当ファイル。lead 集約で管理するものを個別更新すると衝突する）
+5. 報告経路（`SendMessage({to: "team-lead", ...})` で返すこと、プレーンテキスト出力は lead に届かないこと、考えがまとまった時点で途中でも打つことの 3 点。書かないと teammate は報告したつもりで届かず、lead 側には idle 通知だけが見える）
+6. 終了状態（測定可能な形で。残ったものを 1 件ずつ説明できる形にする）
+7. 完了報告の形（終了状態が満たされたことを確かめた手段と実出力を添えさせる）
+8. エスカレーション順（詰まったら待たずに lead に問う）
 
 NG パターン:
 
@@ -67,8 +80,9 @@ NG パターン:
 タスク管理: 引数ありモードでは TaskCreate / TaskList でタスクを管理する。advisor パターンではタスク管理は使わない（ユーザーが直接 advisor に指示する）。
 
 全完了の検知: 各 teammate が完了時に SendMessage で lead に報告する。報告を受けたら TaskList で全タスクの状態を確認し、全完了なら統合へ進む。
+報告は終了状態を確かめた手段と実出力を見てから受け取る。ファイルで確かめられる主張は Read で 1 件当てる。
 
-shutdown: ユーザーの確認を得てから、各 teammate に `SendMessage({to: <name>, message: {type: "shutdown_request", reason: "..."}})` を送る。teammate は `shutdown_response` で承認する。v2.1.178+ ではセッション終了時に自動 cleanup されるため、shutdown は明示的に終わらせたい場合のみ。
+shutdown: ユーザーの確認を得てから、各 teammate に `SendMessage({to: <name>, message: {type: "shutdown_request", reason: "..."}})` を送る。teammate は `shutdown_response` で承認する。セッション終了時に自動 cleanup されるので、shutdown は明示的に終わらせたい場合のみ。
 
 ## advisor パターン
 
@@ -78,13 +92,7 @@ shutdown: ユーザーの確認を得てから、各 teammate に `SendMessage({
 
 1. 現在の WIP issue を特定する（worktree 名 / `Glob(00_issues/*.md)` から推定）
 2. issue の `related:` / `sources:` / 本文のリンク先を「関連資料」として列挙する
-3. fable を spawn する。prompt の要点:
-   - issue と関連資料を読んで内容を把握する
-   - 報告は `SendMessage({to: "team-lead", ...})` で返す。プレーンテキスト出力は lead に届かない
-   - 把握したら「読み終わりました」と報告して待機する
-   - 明確な指示があるまで自分からは動かない
-   - `log.md` / `index.md` / `1_issues.md` / `2_done.md` は触らない（lead が管理するファイル）
-   - 原則書き込みしない（read / web search / grep / アドバイスが役割）
+3. fable を spawn する。briefing はステップ 2 の 8 要素を advisor の値で埋める。役割 = lead の相談相手・レビュー役、読むべき資料 = 手順 2 で列挙したもの、やらないこと = 明確な指示があるまで自分から動かない / lead が明示的に依頼した場合を除き書き込みしない、終了状態 = 資料を読み終えて「読み終わりました」と報告した時点
 4. advisor が読み終わり報告を返したら、ユーザーからの指示を待つ
 
 advisor の仕様:
@@ -128,26 +136,23 @@ teammate 構成・運用に関する制約。フロー横断で適用する。
 - teammate は最大 5 人まで（トークンコスト管理）
 - teammate は気軽に立ち上げすぎない。タスクの独立性と規模が投入に見合うかを判断する
 - 同じファイルを複数の teammate が編集しないようにタスクを分割する
-- teammate のモデル既定は sonnet。advisor は fable。opus はユーザーから明示指示があった時のみ
+- teammate のモデル既定は `sonnet`。advisor は `fable`。`opus` はユーザーから明示指示があった時のみ
 - teammate name は役割名を優先（`researcher` / `reviewer` / `advisor` 等）。汎用 `worker-N` は役割が決まらない場合のフォールバック
 - 引数なし時のタスクは lead が決めない、ユーザー投入を待つ。文脈推測でタスクを teammate に押し付けない
 - ユーザーが lead に直接依頼した作業は teammate に二次委譲しない（依頼宛先のシグナルを優先）
-- teammate の briefing prompt に報告経路を書く。`SendMessage({to: "team-lead", ...})` で返すこと、プレーンテキスト出力は lead に届かないこと、考えがまとまった時点で途中でも打つことの 3 点。書かないと teammate は報告したつもりで届かず、lead 側には idle 通知だけが見える
-- teammate の briefing prompt に「触らないファイルリスト」を含める（`log.md` / `index.md` / `1_issues.md` / `2_done.md` / 他 teammate 担当ファイル等。lead 集約で管理するファイルを teammate が個別更新すると衝突する）
 - teammate は作業開始前にアプローチを lead に報告する。lead はアプローチが妥当と判断したらユーザーに確認せず承認してよい
-- teammate の briefing prompt に終了状態を測定可能な形で書く。残ったものを 1 件ずつ説明できる形にする
-- teammate の briefing prompt に完了報告の形を書く。終了状態が満たされたことを確かめた手段と実出力を添えること。lead はそれを見てから次へ進み、ファイルで確かめられる主張は Read で 1 件当てる
-- teammate の briefing prompt にエスカレーション順を書く。teammate は詰まったら待たずに lead に問い、lead は自分で答えられないものだけユーザーに上げる
+- lead は teammate から上がった問いのうち、自分で答えられないものだけユーザーに上げる
+- 設計書やチーム定義が worker に割り当てた作業は、効率を理由に lead が実行しない
 - lead は teammate を shutdown する前に必ずユーザーに「cleanup 進めていい?」を確認する
 - 一時的な調査・レビュー用 subagent（finder 等、結果だけ欲しいもの）は `name` なしで spawn する。team アクティブ中に `name` 付きで Agent を呼ぶと teammate 化して管理対象が増える
-- task を使う場合、所有者の設定は dispatch より前に済ませる。後から設定すると当人に割り当て通知が飛び、報告済みの teammate との往復が生じる
+- 引数ありモードでは、task の所有者の設定を dispatch より前に済ませる。後から設定すると当人に割り当て通知が飛び、報告済みの teammate との往復が生じる
 
 ## 既知の制約
 
-v2.1.178+ の Agent Teams に共通する制約。skill で回避できないので運用で気をつける。
+Agent Teams に共通する制約。skill で回避できないので運用で気をつける。
 
 - 1 session = 1 team。lead は固定（昇格・譲渡不可）
 - session resume で in-process teammate は復元されない（再 spawn が必要）
 - task status のラグ（teammate が completed マーク忘れ）。lead 側で TaskList を見て補正する場合あり
-- shutdown が遅い（teammate が現在処理中の tool call を完了するまで待つ）
+- shutdown が遅い（teammate が現在処理中の tool call を完了するまで待つ）。`shutdown_request` に応答せず idle 通知を繰り返す場合は、`shutdown_response` を `approve: true` で返すよう明示して再送する
 - teammate からの background subagent は不可（in-process mode）
