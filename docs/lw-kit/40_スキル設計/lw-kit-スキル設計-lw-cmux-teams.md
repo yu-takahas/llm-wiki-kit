@@ -5,7 +5,7 @@ sources:
   - conversation
   - 10_raw/20260715_claude-code-agent-teams-cmux調査.md（ワークスペース側の raw）
 created: 2026-04-16
-updated: 2026-09-08
+updated: 2026-09-23
 ---
 
 # llm-wiki-kit の lw-cmux-teams skill 設計
@@ -48,8 +48,10 @@ teammate の起動は副作用が大きく(トークンコスト、ペイン占�
 許可ツールの列挙は SKILL.md の `allowed-tools` が正本。
 
 teammate の spawn と管理に必要なものだけに絞っている。
-Bash を入れていないのは、lead がこの skill の中でファイルを直接触る経路を持たせないため。
-WIP issue の特定には `Glob` を使う（dot ディレクトリ配下が `ls` の既定出力に出ないので、doc-review 側と手段を揃える）。
+汎用 Bash を入れていないのは、lead がこの skill の中でファイルを直接触る経路を持たせないため。
+WIP issue の特定には `Glob` と `Bash(find:*)` を使う（dot ディレクトリ配下が `ls` の既定出力に出ないため）。
+`Glob` は native build のツール一覧に無いので `find` を併記する（[[Claude-Code-Skillの書き方]]「走査は find / grep を前提に書く」セクション）。
+走査手段は doc-review 側と揃える。
 この範囲では teammate の完了報告のうちファイルで確かめられる主張は Read で当たれるが、コマンド由来の出力は lead 側で再現しない。
 
 ## 用語

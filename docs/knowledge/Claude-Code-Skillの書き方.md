@@ -8,7 +8,7 @@ sources:
   - https://platform.claude.com/docs/ja/build-with-claude/prompt-engineering/prompting-claude-opus-5
   - https://platform.claude.com/docs/ja/build-with-claude/prompt-engineering/claude-prompting-best-practices
 created: 2026-02-11
-updated: 2026-08-11
+updated: 2026-09-23
 ---
 
 # Claude Code Skill の書き方
@@ -20,13 +20,13 @@ skill のロードタイミングや CLAUDE.md / rules との使い分けは [[C
 
 [[探索・活用ジレンマ]] が示すとおり、LLM はデフォルトで greedy（活用）に倒れる。
 この非対称性が、skill の責務設計の判定基準として効く。
-1 skill に探索の所作（棚卸し / 候補列挙 / 既存一巡走査 / リファクタ要否判断）と活用の所作（決め打ちで畳む / 実行）を同居させると、活用側の慣性で探索が空振りする（exploration collapse と同型）。
+1 skill に探索の所作（棚卸し / 候補列挙 / 既存一巡走査 / リファクタ要否判断）と活用の所作（決め打ちで畳む / 実行）を同居させると、活用側の慣性で探索の所作が「該当なし」で終わる（exploration collapse と同型）。
 
 判定: 1 skill の責務に探索と活用が両方入っていたら分割する。
 
 - 新規 skill 設計時のトリガー: 「やること多すぎ」と感じたら、探索フェーズと活用フェーズが両方含まれていないかを問い、含まれていれば分割を lead に提案する
 - 既存 skill のリファクタ時も同じ基準で「分けたほうがよくないか」と提案する
-- 事例: `/lw-commit`（活用）に「ちゃんと反映やりきったか」「リファクタ要否」（探索）を同居させ「該当なし」空振り → `/lw-retro` を別 skill に剥がして解消
+- 事例: `/lw-commit`（活用）に「ちゃんと反映やりきったか」「リファクタ要否」（探索）を同居させたところ、探索側が毎回「該当なし」で終わった → `/lw-retro` を別 skill に分離して解消
 - 例外: 探索 → 活用が必ず連続発火し結果を直接消費するケース（review → fix の [[Self-Refine]] 型）は、1 skill 内で見出し分離（`## 探索` / `## 活用`）+ 引数 flag による mode 切替（`--fix` 等）で代替可
 
 ## 自由度を task に合わせる
@@ -165,6 +165,92 @@ description は毎回 system prompt に積まれる。
 
 予算超過時は skill 名のみにフォールバックする。
 bundled skill（組み込み）は切り詰め対象外。
+
+## 呼び出し制御
+
+| 設定                             | Claude 自動 | ユーザー `/name` | description が context に入る |
+| -------------------------------- | ----------- | ---------------- | ----------------------------- |
+| デフォルト                       | Yes         | Yes              | Yes                           |
+| `disable-model-invocation: true` | No          | Yes              | No（軽量化）                  |
+| `user-invocable: false`          | Yes         | No               | Yes                           |
+
+`disable-model-invocation: true` は deploy / commit 等タイミングを自分で制御したい操作に使う。
+副次効果で description も context に入らなくなり軽量化される。
+context に積まれない以上、description を英語化する実利もない。日本語記述で十分。
+
+## allowed-tools
+
+最小権限の原則で必要なツールのみ:
+
+```yaml
+allowed-tools: [Read, Glob, "Bash(find:*)", "Bash(grep:*)"]  # 読み取り走査
+allowed-tools: [WebFetch, WebSearch, Write, Read]            # Web 調査
+allowed-tools: ["Bash(gh:*)"]                                # GitHub CLI のみ
+```
+
+1 行目で `Grep` / `Glob` だけに頼らない理由は「走査は find / grep を前提に書く」セクション。
+
+Bash はパターンで制限可能: `Bash(npm:*)` / `Bash(git commit:*)`。
+ただし `Bash(find:*)` は `-delete` / `-exec` も permit prompt なしで通すので、許可の範囲では絞れない。
+走査（`-name` 列挙 / パターン検索）にのみ使うと `SKILL.md` 本文に書いて制限する。
+
+## 走査は find / grep を前提に書く
+
+skill の走査手順は `Bash(find:*)` / `Bash(grep:*)` を前提に書く。
+`find` には件数の上限が無く、`ls` の既定出力に出ない dot ディレクトリ配下も拾う。
+`allowed-tools` に `Glob` を併記してよいが、それだけに依存する手順は書かない。
+
+理由は 2 つある。
+以下のうち版を添えていない挙動は 2.1.267 で確認したもの。
+
+1 つは、macOS / Linux / WSL の native build（単体バイナリで配布される版。npm 配布版と対）で `Glob` と `Grep` がツール一覧に無いこと。
+Claude Code 2.1.117 で埋め込みの `bfs` / `ugrep` に置き換えられ、`Bash` の `find` / `grep` がシェル関数経由でそれらを呼ぶようになった。
+シェル関数は `-S dfs`（深さ優先）や `--ignore-files`（`.gitignore` を守る）等の既定フラグを足すので、素の `find` / `grep` と完全に同じ挙動ではない。
+不具合ではなく仕様なので、将来の版で戻る前提の手順は書かない。
+自分の環境がどちらの build かは、ツール一覧に `Glob` が出るかで判定できる。
+
+もう 1 つは、`Glob` が使える環境でも結果が更新時刻の古い順に並んで先頭 100 件で打ち切られること。
+古いファイルが多いディレクトリを走査対象に含めると、新しいファイルが出力から消える。
+重複確認のように網羅が要る用途では取りこぼす。
+
+`Glob` を戻す手段は起動オプションだけで、skill の `allowed-tools` も `settings.json` の `permissions.allow` も効かない。
+`claude --allowedTools Glob` と書くと `Glob` と `Grep` の両方が戻り、`Bash` の permit prompt は従来どおり。
+`claude --tools Grep Glob Bash Read ...`（2.1.162 以降）は列挙しなかった組み込みツールを外す（MCP ツールは残る）ので、`Glob` を戻すだけなら `--allowedTools` を使う。
+
+## 文字列置換
+
+skill 本文中で使える変数（`utils/argumentSubstitution.ts` の順序）:
+
+```text
+1. $arg_name           ← arguments: [arg_name] で定義した名前
+2. $ARGUMENTS[0]       ← 0 ベース index
+3. $0 / $1             ← $ARGUMENTS[N] のショート
+4. $ARGUMENTS          ← 全引数文字列
+5. ${CLAUDE_SKILL_DIR} ← skill のディレクトリパス
+   ${CLAUDE_SESSION_ID}
+6. !`command`          ← Dynamic Context Injection（後述）
+```
+
+名前付き引数は純粋な数字を名前にできない（`$0` 等のショートと衝突）。
+
+### 本文に `$N` を含むスクリプトを直書きしない
+
+置換は skill 本文全体に無条件で走るため、awk / bash のコード例に `$0` / `$2` 等が含まれると、引数なし起動時に空文字へ置換されてスクリプトが壊れた状態で本文が展開される（`line = $0` → `line =`）。
+`$NF` / `$(command)` / `$'\t'` は数字ショートに一致しないため無事で、壊れるのは `$0`-`$9` のみ。
+対策: スクリプトは `scripts/` 配下の補助ファイルに置き、本文からは `bash ${CLAUDE_SKILL_DIR}/scripts/<name>.sh` で参照する（補助ファイルは置換対象外）。
+
+## Dynamic Context Injection
+
+SKILL.md 本文中の `` !`command` `` を skill 起動前にシェル実行し、出力を本文に注入する機能。
+Claude が実行するのではなく前処理。
+MCP server 経由の skill では無効化される（local skill のみ機能）。
+構文・例・使い分けは [[Dynamic-Context-Injection]] 参照。
+
+## context: fork
+
+`context: fork` で会話履歴にアクセスしない独立 context で skill を実行する。
+fork は ToolUse 扱いで [[ReAct]] ループが 1 回余計に回る。
+設定・Fork モード（フィーチャーフラグ）・Sub Agent との関係は [[context-fork]] 参照。
 
 ## 本文の推奨構造
 
@@ -316,7 +402,7 @@ Plan Agent の例では末尾に必ず `### Critical Files for Implementation` +
 ```text
 - To read files use Read instead of cat, head, tail, or sed
 - To edit files use Edit instead of sed or awk
-- To search for files use Glob instead of find or ls
+- To search for files use find and grep through Bash instead of Glob or Grep
 ```
 
 ### 例外条件を `unless` で
@@ -369,65 +455,6 @@ Claude は `paths` 条件付きロード / 常時ロード / wiki link 解決で
 - 必要な詳細フォーマット（frontmatter / セクション構成 / 命名規約）は「対象ファイルの規約に従う」と抽象的に書き、列挙しない
 
 SKILL.md だけでなく rules / CLAUDE.md にも同じく適用される。
-
-## 呼び出し制御
-
-| 設定                             | Claude 自動 | ユーザー `/name` | description が context に入る |
-| -------------------------------- | ----------- | ---------------- | ----------------------------- |
-| デフォルト                       | Yes         | Yes              | Yes                           |
-| `disable-model-invocation: true` | No          | Yes              | No（軽量化）                  |
-| `user-invocable: false`          | Yes         | No               | Yes                           |
-
-`disable-model-invocation: true` は deploy / commit 等タイミングを自分で制御したい操作に使う。
-副次効果で description も context に入らなくなり軽量化される。
-context に積まれない以上、description を英語化する実利もない。日本語記述で十分。
-
-## allowed-tools
-
-最小権限の原則で必要なツールのみ:
-
-```yaml
-allowed-tools: [Read, Grep, Glob]                    # 読み取り専用
-allowed-tools: [WebFetch, WebSearch, Write, Read]    # Web 調査
-allowed-tools: ["Bash(gh:*)"]                        # GitHub CLI のみ
-```
-
-Bash はパターンで制限可能: `Bash(npm:*)` / `Bash(git commit:*)`。
-
-## 文字列置換
-
-skill 本文中で使える変数（`utils/argumentSubstitution.ts` の順序）:
-
-```text
-1. $arg_name           ← arguments: [arg_name] で定義した名前
-2. $ARGUMENTS[0]       ← 0 ベース index
-3. $0 / $1             ← $ARGUMENTS[N] のショート
-4. $ARGUMENTS          ← 全引数文字列
-5. ${CLAUDE_SKILL_DIR} ← skill のディレクトリパス
-   ${CLAUDE_SESSION_ID}
-6. !`command`          ← Dynamic Context Injection（後述）
-```
-
-名前付き引数は純粋な数字を名前にできない（`$0` 等のショートと衝突）。
-
-### 本文に `$N` を含むスクリプトを直書きしない
-
-置換は skill 本文全体に無条件で走るため、awk / bash のコード例に `$0` / `$2` 等が含まれると、引数なし起動時に空文字へ置換されてスクリプトが壊れた状態で本文が展開される（`line = $0` → `line =`）。
-`$NF` / `$(command)` / `$'\t'` は数字ショートに一致しないため無事で、壊れるのは `$0`-`$9` のみ。
-対策: スクリプトは `scripts/` 配下の補助ファイルに置き、本文からは `bash ${CLAUDE_SKILL_DIR}/scripts/<name>.sh` で参照する（補助ファイルは置換対象外）。
-
-## Dynamic Context Injection
-
-SKILL.md 本文中の `` !`command` `` を skill 起動前にシェル実行し、出力を本文に注入する機能。
-Claude が実行するのではなく前処理。
-MCP server 経由の skill では無効化される（local skill のみ機能）。
-構文・例・使い分けは [[Dynamic-Context-Injection]] 参照。
-
-## context: fork
-
-`context: fork` で会話履歴にアクセスしない独立 context で skill を実行する。
-fork は ToolUse 扱いで [[ReAct]] ループが 1 回余計に回る。
-設定・Fork モード（フィーチャーフラグ）・Sub Agent との関係は [[context-fork]] 参照。
 
 ## 配置場所
 

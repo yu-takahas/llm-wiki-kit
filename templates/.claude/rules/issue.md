@@ -169,7 +169,7 @@ append した時はユーザーに報告する。
   - プロジェクト: ワークスペース名 / 案件名。どちらにも当てはまらない場合は `_` prefix を付けた bare-name（例: `_research-thinking-style-profile.md`）
   - サブプロジェクト / 動詞: 既存 issue で使われている語彙を探し、合うものがあればそれを使う。なければ新しく作る
   - 対象: 具体物
-- 命名前に `Glob("00_issues/**/*.md")` で既存の名前パターンを確認する（`.10_todo/` 等の dot ディレクトリも拾う。起票する skill は Bash を持たないので `find` で代用しない）
+- 命名前に `find 00_issues -name "*.md"` で既存の名前パターンを確認する（`.10_todo/` 等の dot ディレクトリも拾う。`Glob` は native build のツール一覧に無く、あっても 100 件で打ち切られて直下の WIP が落ちる）
 - frontmatter は issue 固有スキーマ（`related` / `source` / `created` / `tags`）
 
 `related` は配列で、要素は次のいずれか。

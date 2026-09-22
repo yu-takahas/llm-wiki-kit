@@ -35,7 +35,7 @@ step 2 が link 一覧（`/tmp/lw-lint-raw-links.txt`）を生成し、step 4・
 
 ### 1. page 一覧を取得
 
-Glob で `30_wiki/**/*.md` / `40_project/**/*.md` を列挙。
+`find 30_wiki 40_project -name "*.md"` で列挙。
 この一覧を step 3（frontmatter 検証）/ 4（orphan）/ 5（stale claims）/ 7（missing cross-ref）で使う。
 step 2 の抽出は link 専用で、スキャン範囲が異なる（`00_issues/` / `.claude/` / `20_library/` / `50_feedback/` とルート直下メタファイルも含む。`log.md` のみ除外）。
 

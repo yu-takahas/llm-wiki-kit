@@ -6,7 +6,7 @@ sources:
   - "[[lw-kit-スキル設計-lw-commit]]"
   - "[[lw-kit-詳細設計-issue]]"
 created: 2026-07-03
-updated: 2026-08-31
+updated: 2026-09-23
 ---
 
 # llm-wiki-kit の lw-create-issue skill 設計
@@ -71,8 +71,11 @@ description は日本語のまま維持する（`disable-model-invocation: true`
 
 ## 許可ツールの最小化
 
-Read / Edit / Write / Glob の 4 つ。
-Bash を使わない理由: `Glob` 1 つで `00_issues/**/*.md`(全状態のサブディレクトリ含む)を取得でき、`Bash(ls:*)` / `Bash(find:*)` を追加する必要がない(最小権限の原則)。
+Read / Edit / Write / Glob + `Bash(find:*)`。
+`Glob` だけに依存しない理由は [[Claude-Code-Skillの書き方]]「走査は find / grep を前提に書く」セクションが持つ。
+`00_issues/**/*.md` は全状態のサブディレクトリを含めると 100 件を超え、`Glob` の打ち切りで直下の WIP が欠落するので、重複確認は `find` で行う。
+`Bash(find:*)` は走査にのみ使い、`-delete` / `-exec` は使わない。
+汎用 Bash は持たない(最小権限の原則)。
 具体的な用途は SKILL.md を参照。
 
 ## 責務の境界（worktree を持たない根拠）

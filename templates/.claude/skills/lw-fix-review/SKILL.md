@@ -2,7 +2,7 @@
 name: lw-fix-review
 description: レビュー指摘を取捨選択して対象ファイルに反映し、再利用可能な知見を蓄積する skill。待機中の advisor がいれば見解を求める。昇格候補は提案のみ。lead 発火。
 disable-model-invocation: true
-allowed-tools: [Read, Edit, Glob, Grep, ListAgents, SendMessage]
+allowed-tools: [Read, Edit, Glob, Grep, "Bash(find:*)", "Bash(grep:*)", ListAgents, SendMessage]
 argument-hint: "<レビュー結果のパスまたは内容> [<対象ファイル>]"
 ---
 
@@ -40,7 +40,7 @@ lead 相談はコスト大か、閉じた条件に該当する場合のみ（詳
 
 | 入力形式                     | レビュー結果の取り方                           | 対象ファイルの特定                                     |
 | ---------------------------- | ---------------------------------------------- | ------------------------------------------------------ |
-| `/tmp/lw-review/` 配下       | Glob で特定して Read                           | findings ファイル内の対象ファイル情報から特定          |
+| `/tmp/lw-review/` 配下       | `find` で特定して Read                         | findings ファイル内の対象ファイル情報から特定          |
 | 会話内のレビュー指摘テキスト | 直前の会話履歴から指摘リストを抽出             | 直近の会話で言及された対象ファイル                     |
 | 自然言語指定                 | 「さっきのレビュー」等から会話履歴で path 特定 | `$ARGUMENTS` で `<target-file>` 明示があればそれを優先 |
 
@@ -124,7 +124,7 @@ Edit 失敗時は該当指摘を「Edit 失敗」として記録し、他指摘�
 
 手順:
 
-1. Glob（`50_feedback/feedback-知見-*.md`）で蓄積先候補を走査
+1. `find 50_feedback -name "feedback-知見-*.md"` で蓄積先候補を走査
 2. 対象プロジェクトに該当するファイルを Read
 3. 各指摘に蓄積ラベルを付与（判定基準は「蓄積ラベルの判定基準」セクション参照）
 4. 「既存補強」「却下パターン」「新規知見」の指摘を知見ファイルに追記 Edit

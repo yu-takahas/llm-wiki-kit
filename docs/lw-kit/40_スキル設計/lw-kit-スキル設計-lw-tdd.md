@@ -8,7 +8,7 @@ sources:
   - "superpowers"
   - "[[テスト駆動開発の実践]]"
 created: 2026-07-17
-updated: 2026-08-31
+updated: 2026-09-23
 ---
 
 # llm-wiki-kit の TDD skill 設計
@@ -71,7 +71,8 @@ frontmatter `description` は英語・third person で書く（[[Claude-Code-Ski
 
 ## 許可ツール
 
-Read / Edit / Grep / Glob / Task / `Bash(npm run:*)`。具体値は `SKILL.md` が正本。
+Read / Edit / Grep / Glob / Task / `Bash(npm run:*)` + `Bash(find:*)` / `Bash(grep:*)`。具体値は `SKILL.md` が正本。
+`Glob` / `Grep` は native build のツール一覧に無いため、走査用の scoped Bash を併せて持つ（[[Claude-Code-Skillの書き方]]「走査は find / grep を前提に書く」セクション）。
 
 matlugert との差分（判断）:
 

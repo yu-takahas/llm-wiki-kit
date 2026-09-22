@@ -5,7 +5,7 @@ sources:
   - "[[Claude-Code-Skillの書き方]]"
   - "[[プロンプト設計原則]]"
 created: 2026-05-22
-updated: 2026-09-10
+updated: 2026-09-23
 ---
 
 # llm-wiki-kit の lw-fix-review skill 設計
@@ -58,7 +58,12 @@ project-local 配置（`.claude/skills/` 配下）。
 
 ## 許可ツール
 
-Bash は追加しない。Bash は書き込み面が原理的に無制限になり、`disable-model-invocation` にするほど慎重な本 skill の性格と合わない。走査は Glob と Grep で足りる。
+汎用 Bash は追加しない。Bash は書き込み面が原理的に無制限になり、`disable-model-invocation` にするほど慎重な本 skill の性格と合わない。
+
+走査用に `Bash(find:*)` と `Bash(grep:*)` だけを scoped で持つ。
+`Glob` / `Grep` が native build のツール一覧に無く、走査手段が他にないため（[[Claude-Code-Skillの書き方]]「走査は find / grep を前提に書く」セクション）。
+この 2 つは走査（`-name` 列挙 / パターン検索）にのみ使い、`find` の `-delete` / `-exec` は使わない。
+`Bash(find:*)` は `-delete` / `-exec` も permit prompt なしで通すので、許可の範囲では絞れず、使用規則で塞ぐ。
 
 書き込み面を allowlist で制限する理由: 自走範囲を広げた（相談トリガーを閉じた条件に限定した）代わりに、書き込み面の予測可能性で安全性を担保する。
 `Write` も持たない。反映は既存ファイルへの Edit だけで、新規ファイルの作成は自走範囲の外に置く。

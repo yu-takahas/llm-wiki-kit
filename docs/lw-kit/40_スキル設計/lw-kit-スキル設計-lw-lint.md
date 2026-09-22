@@ -10,7 +10,7 @@ sources:
   - "[[Claude-Code-Skillの書き方]]"
   - conversation
 created: 2026-07-01
-updated: 2026-09-04
+updated: 2026-09-23
 ---
 
 # llm-wiki-kit の lint skill 設計
@@ -98,6 +98,7 @@ worktree 並行作業の merge 後も有効（レーン A で rename・レーン
 ## 許可ツールの最小化
 
 Read / Glob / Grep / Write + scoped Bash(`find` / `awk` / `sort` / `comm` / `wc` / `grep` / `date`)。
+`Glob` / `Grep` は native build のツール一覧に無いので、実際の走査は scoped Bash 側が担う（[[Claude-Code-Skillの書き方]]「走査は find / grep を前提に書く」セクション）。
 Edit は持たない理由: lint は読み取り専用で修正しない(修正は lead 判断)。
 Write は `/tmp/` へのレポート出力のみ。
 具体的なリストと用途は SKILL.md を参照。

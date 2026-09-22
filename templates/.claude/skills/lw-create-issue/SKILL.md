@@ -3,7 +3,7 @@ name: lw-create-issue
 effort: medium
 description: issue を起票する（内容解釈 → 名前・骨子の自動生成 → ファイル生成 / 1_issues.md 登録 / log.md 追記の 3 点セット反映）。lead が明示的に /lw-create-issue を呼んだ時のみ起動。
 argument-hint: "<まとめる指示 / 貼り付けテキスト> [wip|icebox]"
-allowed-tools: [Read, Edit, Write, Glob]
+allowed-tools: [Read, Edit, Write, Glob, "Bash(find:*)"]
 disable-model-invocation: true
 ---
 
@@ -54,7 +54,7 @@ Claude が内容から名前・骨子・配置を組み立てて提示し、lead
 
 ### 2. 骨子生成 + lead 確認
 
-- `Glob("00_issues/**/*.md")` で全状態の既存ファイル名を取得し、重複を避ける（Bash `find` 等で代用しない）
+- `find 00_issues -name "*.md"` で全状態の既存ファイル名を取得し、重複を避ける（`.10_todo/` 等の dot ディレクトリも拾う）
 - 素材の内容から命名規則（`<project>-<subproject>-<verb>-<object>`、kebab-case、日付プレフィックスなし）に沿った名前を生成する。素材が llm-wiki 自身の開発でも既存案件でもない場合（自己分析等）は `_` prefix を付けた bare-name にする（例: `_setup-worktree-parallel-sessions.md`）。`_` は「project なしが意図的」であることを明示するマーカー
 - 名前 prefix からカテゴリを推定する（`llm-wiki-` → 🌊 llm-wiki 開発 / `my-project-` 等その他プロジェクト → 🏗️ プロジェクト）。prefix が無い・当てはまらない場合は `1_issues.md` の既存カテゴリ見出しから内容に最も合うものを選ぶ。無ければ新規カテゴリを作る
 - 骨子（frontmatter `related` / `source` / `created` / `tags` + `# <name>` + 💧 進行中 / 🌂 中断点 / ☔ TODO / 関連の見出し枠）を組み立てて提示する
@@ -90,7 +90,7 @@ Claude が内容から名前・骨子・配置を組み立てて提示し、lead
 1. ICEBOX 登録を `1_issues.md` に書いてしまう（`0_icebox.md` の誤り、ステップ 4）
 2. lead に名前を確認してしまう（自動生成すべきところを聞き返す、ステップ 2 の趣旨違反）
 3. 配置キーワードがないのに WIP / ICEBOX に置いてしまう（デフォルトは TODO、ステップ 3・4）
-4. 重複確認を `Glob` でなく `allowed-tools` 外の Bash（`find` 等）でやってしまう（Step 2 は `Glob` を使う）
+4. 重複確認を `Glob` で済ませてしまう（native build では `Glob` が無く、あっても 100 件で打ち切られて直下の WIP が落ちる。Step 2 は `find` を使う）
 5. Write した issue にパス参照（`30_wiki/Foo.md` 等）を混入する（CLAUDE.md「文書規約」の `[[link]]` 規約違反。`[[Foo]]` を使う）
 
 ## 必須動作

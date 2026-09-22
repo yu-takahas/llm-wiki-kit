@@ -6,6 +6,7 @@ disable-model-invocation: true
 allowed-tools:
   - Read
   - Glob
+  - Bash(find:*)
   - Agent
   - SendMessage
   - TaskCreate
@@ -90,7 +91,7 @@ shutdown: ユーザーの確認を得てから、各 teammate に `SendMessage({
 
 手順:
 
-1. 現在の WIP issue を特定する（worktree 名 / `Glob(00_issues/*.md)` から推定）
+1. 現在の WIP issue を特定する（worktree 名 / `find 00_issues -maxdepth 1 -name "*.md"` から推定）
 2. issue の `related:` / `sources:` / 本文のリンク先を「関連資料」として列挙する
 3. fable を spawn する。briefing はステップ 2 の 8 要素を advisor の値で埋める。役割 = lead の相談相手・レビュー役、読むべき資料 = 手順 2 で列挙したもの、やらないこと = 明確な指示があるまで自分から動かない / lead が明示的に依頼した場合を除き書き込みしない、終了状態 = 資料を読み終えて「読み終わりました」と報告した時点
 4. advisor が読み終わり報告を返したら、ユーザーからの指示を待つ

@@ -2,7 +2,7 @@
 name: lw-doc-review
 description: 文書を層別 finder の並列レビューで指摘ファイルにする skill。指摘のみで修正しない（修正は /lw-fix-review）。lead 発火。
 disable-model-invocation: true
-allowed-tools: [Read, Write, Edit, Agent, Glob, "Bash(mkdir -p /tmp/lw-review/*)", "Bash(ls /tmp/lw-review/*)", "Bash(date:*)", "Bash(grep:*)"]
+allowed-tools: [Read, Write, Edit, Agent, Glob, "Bash(find:*)", "Bash(mkdir -p /tmp/lw-review/*)", "Bash(ls /tmp/lw-review/*)", "Bash(date:*)", "Bash(grep:*)"]
 argument-hint: "<ファイルパスまたは自然言語> [--quick|--full|--profile=<種別>]"
 ---
 
@@ -79,14 +79,14 @@ quick でも full でも 6 ステップ全てを通す。quick で merge が自�
 
 切り出した後、対象ファイルを特定し Read する。特定できなければ聞く。
 
-**宣言ファイルの発見（Glob + ルーター）:**
+**宣言ファイルの発見（走査 + ルーター）:**
 
-llm-wiki ルートで `Glob(**/.doc-review.md)` を実行し、全宣言ファイルを取得する。
+llm-wiki ルートで `find . -name ".doc-review.md"` を実行し、全宣言ファイルを取得する。
 対象ファイルのパスと比較し、最寄り祖先ディレクトリの `.doc-review.md` を宣言として使う（以下 walk-up）。
 ルートの `.doc-review.md` はルーターなので宣言候補から除外する。
 
 発見なし、またはルーターのみヒットした場合、llm-wiki ルートの `.doc-review.md`（ルーター）を読む。
-外部 repo の対象ファイルは Glob で拾えないため、ルーター経由で誘導する。
+外部 repo の対象ファイルは cwd 配下の走査で拾えないため、ルーター経由で誘導する。
 ルーターは対象ファイルのパスを上から順に前方一致で照合し、最初にマッチした行の参照先を宣言として使う。
 ルーターの解決規則:
 

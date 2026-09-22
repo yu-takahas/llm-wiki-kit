@@ -2,7 +2,7 @@
 name: lw-render
 description: Renders a raw source (`10_raw/<file>.md`) into the llm-wiki (`30_wiki/` 汎用 or `40_project/<案件>/` 案件固有). Triggers when the lead adds a new raw source and needs it propagated as 5-10 wiki pages across entity / concept / synthesis categories.
 argument-hint: "<raw-file-path>"
-allowed-tools: [Read, Write, Edit, Glob, Grep, "Bash(wc:*)", "Bash(tail:*)"]
+allowed-tools: [Read, Write, Edit, Glob, Grep, "Bash(find:*)", "Bash(grep:*)", "Bash(wc:*)", "Bash(tail:*)"]
 disable-model-invocation: true
 ---
 
@@ -47,7 +47,7 @@ raw を見たときに浮かびがちな skip 理由と、それに対する判�
 
 1. `$ARGUMENTS` で渡された raw path が存在するか Read で確認。なければ即停止して lead に再指定を依頼。
 2. raw の本文長を確認。1500 byte 未満なら render 拒否して lead に raw 加筆を促す（無理に書き始めない）。
-3. wiki / project 側の同名 / 類似タイトルの page を Glob で検索（`30_wiki/` と `40_project/<案件>/` 両方）。既存なら「上書き / 別タイトル / update」のどれにするか lead に確認。NEVER overwrite an existing page without confirming with lead first.
+3. wiki / project 側の同名 / 類似タイトルの page を `find` で検索（`30_wiki/` と `40_project/<案件>/` 両方）。既存なら「上書き / 別タイトル / update」のどれにするか lead に確認。NEVER overwrite an existing page without confirming with lead first.
    case-insensitive 衝突（macOS / Windows ファイルシステム）にも注意。例: `React.md` vs 既存 `ReAct.md` のように大文字小文字違いで衝突する場合は、別 page 扱いだが同一ファイルとして上書きされる。対処パターン: A) ファイル名識別子明示（例: `react-library.md`、title は元のまま）/ B) 既存ファイルを別名にリネーム / C) 別名 + 新規 title。lead に確認して決める、勝手に上書きしない。
 4. 案件固有出力の場合、`40_project/<案件>/` サブディレクトリが未存在なら lead に「mkdir or 既存案件選択」を確認。
 
@@ -189,15 +189,15 @@ contradictions:
 
 ### 7. バックリンク走査
 
-ALWAYS: 新出 entity / concept 名で `30_wiki/` と `40_project/` 両方を Grep する。
+ALWAYS: 新出 entity / concept 名で `30_wiki/` と `40_project/` 両方を `grep` する。
 省略可の選択肢を作らない、必ず実行する。
 
-Grep の結果でリンクなしの参照箇所が見つかったら lead に提示し、`[[link]]` 化するかを per-file で確認する。
+`grep` の結果でリンクなしの参照箇所が見つかったら lead に提示し、`[[link]]` 化するかを per-file で確認する。
 勝手に書き換えない。
 
 ### 8. 影響範囲報告
 
-render で作成または編集した page を引用している他 page を `30_wiki/` と `40_project/` 両方から Grep で取得して出力する。
+render で作成または編集した page を引用している他 page を `30_wiki/` と `40_project/` 両方から `grep` で取得して出力する。
 期待値は 5-10 ページ。極端に少ない（0-1）または多い（20+）なら lead に報告。
 
 形式:
@@ -266,7 +266,7 @@ synthesis や分解後の page の出力先も Process 3 議論時に確定し�
 
 ## 必須動作
 
-- バックリンク走査前の Grep は省略不可（Process 7）
+- バックリンク走査前の `grep` は省略不可（Process 7）
 - log.md / index.md / case root の「関連 raw」セクションの更新は render 完了後に必ず実行する（Process 9）。ユーザーに委ねない
 
 `/lw-lint` 系の整合性チェックは本 skill の対象外。render は render のみに集中する。

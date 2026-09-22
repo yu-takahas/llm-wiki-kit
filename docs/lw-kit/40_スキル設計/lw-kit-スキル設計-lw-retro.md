@@ -9,7 +9,7 @@ sources:
   - "[[プロンプト設計原則]]"
   - conversation
 created: 2026-05-27
-updated: 2026-09-08
+updated: 2026-09-23
 ---
 
 # llm-wiki-kit の retro skill 設計
@@ -93,7 +93,9 @@ description は日本語のまま維持する。
 ## 許可ツールの最小化
 
 汎用 Bash は持たない。
-Glob を選ぶのは、dot ファイルが `ls` 走査に出ないため。`Bash(find)` を足すより doc-review 側と手段を揃える方が一貫する。
+`Glob` と `Bash(find:*)` の両方を持つ。
+dot ファイルが `ls` 走査に出ないので列挙には `Glob` か `find` が要り、`Glob` は native build のツール一覧に無い（[[Claude-Code-Skillの書き方]]「走査は find / grep を前提に書く」セクション）。
+doc-review 側と手段を揃える。
 Write を含むのは反映で新規 page / memory を作る場合があるため（要確認側、「反映の自走度」参照）。
 git は read-only（add / commit は `/lw-commit` の責務）。
 許可リストの具体値は SKILL.md が正本。設計書に写すと、SKILL.md 側で増減したときに気づかず乖離する。
@@ -216,7 +218,7 @@ why:
 - 軽微 = rules の骨子確認規律（[[lw-kit-詳細設計-rules]]）の「既存ファイルへの軽微な Edit / 行追記」に相当、自走 OK の範囲
 - 要確認 = 同骨子確認規律の「新規作成 / 大きい修正」+ memory 運用（CLAUDE.md の「auto memory 保存前に必ず確認」、[[lw-kit-詳細設計-CLAUDE.md]]）に該当
 - memory 保存は特に「今回限りの指示と長期的な好み・ルールの区別がユーザー側にしかつかない」（CLAUDE.md、[[lw-kit-詳細設計-CLAUDE.md]]）ため、skill 内でも必ず確認を挟む
-- 別リポジトリの `.doc-review.md` への書き戻しは要確認側に置く。外部 repo の宣言はルーター経由でしか辿れず、`Glob` のヒットにも出ないので、触る対象が lead の想定と食い違いやすい
+- 別リポジトリの `.doc-review.md` への書き戻しは要確認側に置く。外部 repo の宣言はルーター経由でしか辿れず、cwd 配下の走査にも出ないので、触る対象が lead の想定と食い違いやすい
 
 ## /commit との境界
 
