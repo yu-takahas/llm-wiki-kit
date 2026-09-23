@@ -1,5 +1,6 @@
 ---
 name: lw-research-doc
+effort: high
 description: Researches a URL or keywords and generates a markdown document. Use when fetching a webpage or searching a topic to document it.
 disable-model-invocation: true
 allowed-tools: WebFetch, WebSearch, Write, Read

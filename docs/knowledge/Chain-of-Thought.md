@@ -4,7 +4,7 @@ tags: [prompt-engineering, reasoning, CoT, technique]
 sources:
   - https://platform.claude.com/docs/ja/build-with-claude/prompt-engineering/claude-prompting-best-practices
 created: 2026-05-17
-updated: 2026-08-11
+updated: 2026-09-24
 ---
 
 # Chain of Thought
@@ -20,14 +20,14 @@ Wei et al., 2022. Chain-of-Thought Prompting Elicits Reasoning in Large Language
 ## 思考が既定のモデルでの扱い
 
 CoT を明示指示するかは、モデルの思考が既定で有効かどうかで決まる。
-2026 年 8 月時点の Claude では、設定がモデルごとに違う。
+2026 年 9 月時点の Claude では、設定がモデルごとに違う。
 
-| モデル                     | 思考の既定                       |
-| -------------------------- | -------------------------------- |
-| Fable 5 / Mythos 5         | 常にオン、設定で切れない         |
-| Opus 5 / Sonnet 5          | `thinking` を省略するとオン      |
-| Opus 4.6〜4.8 / Sonnet 4.6 | `thinking` を省略するとオフ      |
-| Haiku 4.5                  | 拡張思考のみ。指定しなければオフ |
+| モデル                                    | 思考の既定                       |
+| ----------------------------------------- | -------------------------------- |
+| Fable 5 / Fable 5.1 / Mythos 5 / Opus 5.5 | 常にオン、設定で切れない         |
+| Opus 5 / Sonnet 5                         | `thinking` を省略するとオン      |
+| Opus 4.6〜4.8 / Sonnet 4.6                | `thinking` を省略するとオフ      |
+| Haiku 4.5                                 | 拡張思考のみ。指定しなければオフ |
 
 思考が有効なら CoT は暗黙に働くので、「段階的に説明して」の明示指示は要らない。
 Opus 5 では思考の無効化が effort `high` 以下に限られ、`xhigh` / `max` で無効化すると 400 エラーになる。

@@ -1,5 +1,6 @@
 ---
 name: lw-render
+effort: high
 description: Renders a raw source (`10_raw/<file>.md`) into the llm-wiki (`30_wiki/` 汎用 or `40_project/<案件>/` 案件固有). Triggers when the lead adds a new raw source and needs it propagated as 5-10 wiki pages across entity / concept / synthesis categories.
 argument-hint: "<raw-file-path>"
 allowed-tools: [Read, Write, Edit, Glob, Grep, "Bash(find:*)", "Bash(grep:*)", "Bash(wc:*)", "Bash(tail:*)"]

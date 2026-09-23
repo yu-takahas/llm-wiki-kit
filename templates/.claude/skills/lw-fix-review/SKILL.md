@@ -1,5 +1,6 @@
 ---
 name: lw-fix-review
+effort: high
 description: レビュー指摘を取捨選択して対象ファイルに反映し、再利用可能な知見を蓄積する skill。待機中の advisor がいれば見解を求める。昇格候補は提案のみ。lead 発火。
 disable-model-invocation: true
 allowed-tools: [Read, Edit, Glob, Grep, "Bash(find:*)", "Bash(grep:*)", ListAgents, SendMessage]

@@ -1,5 +1,6 @@
 ---
 name: lw-doc-review
+effort: high
 description: 文書を層別 finder の並列レビューで指摘ファイルにする skill。指摘のみで修正しない（修正は /lw-fix-review）。lead 発火。
 disable-model-invocation: true
 allowed-tools: [Read, Write, Edit, Agent, Glob, "Bash(find:*)", "Bash(mkdir -p /tmp/lw-review/*)", "Bash(ls /tmp/lw-review/*)", "Bash(date:*)", "Bash(grep:*)"]

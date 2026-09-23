@@ -1,5 +1,6 @@
 ---
 name: lw-tdd
+effort: high
 description: "Runs TDD Red-Green-Refactor cycles with subagent isolation. Dispatches one implementer subagent per test scenario, verifies evidence, and updates issue progress."
 disable-model-invocation: true
 allowed-tools: [Read, Edit, Grep, Glob, Task, "Bash(find:*)", "Bash(grep:*)", "Bash(npm run:*)"]
